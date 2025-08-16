@@ -1,26 +1,27 @@
 use crate::smart_device::SmartDevice;
+use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 
 pub struct Room {
-    devises: Vec<SmartDevice>,
+    devises: HashMap<String, SmartDevice>,
 }
 
 impl Index<usize> for Room {
     type Output = SmartDevice;
 
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.devises[index]
+    fn index(&self, name: &str) -> &Self::Output {
+        &self.devises.get(name).expect(format!("Device name {} not found", name).as_str())
     }
 }
 
 impl IndexMut<usize> for Room {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.devises[index]
+    fn index_mut(&mut self, name: &str) -> &mut Self::Output {
+        &mut self.devises.get(name).expect(format!("Device name {} not found", name).as_str())
     }
 }
 
 impl Room {
-    pub fn new(devises: Vec<SmartDevice>) -> Self {
+    pub fn new(devises: HashMap<String, SmartDevice>) -> Self {
         Room { devises }
     }
 

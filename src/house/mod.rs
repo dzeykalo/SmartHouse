@@ -1,33 +1,34 @@
+use std::collections::HashMap;
 use crate::room::Room;
 use std::ops::{Index, IndexMut};
 
 pub struct House {
-    rooms: Vec<Room>,
+    rooms: HashMap<String, Room>,
 }
 
-impl Index<usize> for House {
+impl Index<&str> for House {
     type Output = Room;
 
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.rooms[index]
+    fn index(&self, name: &str) -> &Self::Output {
+        &self.rooms.get(name).expect(format!("Room name {} not found", name).as_str())
     }
 }
 
-impl IndexMut<usize> for House {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.rooms[index]
+impl IndexMut<&str> for House {
+    fn index_mut(&mut self, name: &str) -> &mut Self::Output {
+        &mut self.rooms.get(name).expect(format!("Room name {} not found", name).as_str())
     }
 }
 
 impl House {
-    pub fn new(rooms: Vec<Room>) -> Self {
+    pub fn new(rooms: HashMap<String, Room>) -> Self {
         House { rooms }
     }
 
     pub fn print_status(&self) {
-        for i in 0..self.rooms.len() {
-            println!("Room {}:", i);
-            self.rooms[i].print_status();
+        for (name, room) in &self.rooms {
+            println!("Room {}:", name);
+            self.rooms[name].print_status();
             println!();
         }
     }
