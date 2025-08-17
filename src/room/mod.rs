@@ -6,7 +6,7 @@ pub struct Room {
     devises: HashMap<String, SmartDevice>,
 }
 
-impl Index<usize> for Room {
+impl Index<&str> for Room {
     type Output = SmartDevice;
 
     fn index(&self, name: &str) -> &Self::Output {
@@ -14,9 +14,9 @@ impl Index<usize> for Room {
     }
 }
 
-impl IndexMut<usize> for Room {
+impl IndexMut<&str> for Room {
     fn index_mut(&mut self, name: &str) -> &mut Self::Output {
-        &mut self.devises.get(name).expect(format!("Device name {} not found", name).as_str())
+        self.devises.get_mut(name).expect(&format!("Device name {} not found", name))
     }
 }
 
@@ -26,8 +26,10 @@ impl Room {
     }
 
     pub fn print_status(&self) {
-        for i in 0..self.devises.len() {
-            self.devises[i].print_status();
+        for (name, room) in &self.devises {
+            println!("Devise {}:", name);
+            self.devises[name].print_status();
+            println!();
         }
     }
 }

@@ -16,7 +16,7 @@ impl Index<&str> for House {
 
 impl IndexMut<&str> for House {
     fn index_mut(&mut self, name: &str) -> &mut Self::Output {
-        &mut self.rooms.get(name).expect(format!("Room name {} not found", name).as_str())
+        self.rooms.get_mut(name).expect(&format!("Room name {} not found", name))
     }
 }
 
