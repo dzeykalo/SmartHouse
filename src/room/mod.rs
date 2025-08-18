@@ -1,7 +1,10 @@
+use std::error::Error;
+use std::fmt;
 use crate::smart_device::SmartDevice;
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 
+#[derive(Debug)]
 pub struct Room {
     devises: HashMap<String, SmartDevice>,
 }
@@ -21,15 +24,79 @@ impl IndexMut<&str> for Room {
 }
 
 impl Room {
-    pub fn new(devises: HashMap<String, SmartDevice>) -> Self {
-        Room { devises }
+    pub fn new() -> Self {
+        Room { devises: Default::default() }
+    }
+
+    pub fn add_device(&mut self, name: &str, device: SmartDevice) {
+        self.devises.insert(name.to_string(), device);
+    }
+
+    pub fn del_device(&mut self, name: &str) -> Option<SmartDevice> {
+        self.devises.remove(&name.to_string())
+    }
+
+    pub fn get_device(&self, name: &str) -> Result<&SmartDevice, Box<dyn Error>> {
+        let device = self.devises.get(name).ok_or_else(|| {
+            Box::new(DeviceError {
+                message: name.to_string(),
+            })
+        })?;
+
+        Ok(device)
     }
 
     pub fn print_status(&self) {
+        println!("{:14}{:14}{:>6}{:>8}", "Name", "Type", "Status", "Value");
         for (name, room) in &self.devises {
-            println!("Devise {}:", name);
-            self.devises[name].print_status();
-            println!();
+            println!("{:14}{:?}", name, self.devises[name]);
+        }
+    }
+}
+
+#[derive(Debug)]
+struct DeviceError {
+    message: String
+}
+
+impl fmt::Display for DeviceError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Device {} not found", self.message)
+    }
+}
+
+impl Error for DeviceError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_del_device() {
+        let mut rooms = Room::new();
+        rooms.add_device("socket", SmartDevice::new_power_socket(100.0));
+        rooms.del_device("socket");
+        assert_eq!(rooms.devises.len(), 0);
+    }
+
+    #[test]
+    fn test_del_device_not_exists() {
+        let mut rooms = Room::new();
+        rooms.add_device("socket1", SmartDevice::new_power_socket(100.0));
+        let result = rooms.del_device("socket2");
+        assert!(result.is_none());
+        assert!(rooms.devises.contains_key("socket1"));
+    }
+
+    #[test]
+    fn test_get_device_missing() {
+        let rooms = Room::new();
+
+        match rooms.get_device("socket") {
+            Err(e) => {
+                assert_eq!(e.to_string(), "Device socket not found");
+            }
+            _ => panic!("An error was expected, but it did not occur"),
         }
     }
 }

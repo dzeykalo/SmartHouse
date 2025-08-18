@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use crate::room::Room;
 use std::ops::{Index, IndexMut};
 
+#[derive(Debug)]
 pub struct House {
     rooms: HashMap<String, Room>,
 }
@@ -21,13 +22,21 @@ impl IndexMut<&str> for House {
 }
 
 impl House {
-    pub fn new(rooms: HashMap<String, Room>) -> Self {
-        House { rooms }
+    pub fn new() -> Self {
+        House { rooms: Default::default() }
+    }
+
+    pub fn add_room(&mut self, name: &str) {
+        self.rooms.insert(name.to_string(), Room::new());
+    }
+
+    pub fn del_room(&mut self, name: &str) {
+        self.rooms.remove(&name.to_string());
     }
 
     pub fn print_status(&self) {
         for (name, room) in &self.rooms {
-            println!("Room {}:", name);
+            println!("Room: {}", name);
             self.rooms[name].print_status();
             println!();
         }
