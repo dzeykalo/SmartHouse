@@ -1,6 +1,18 @@
 use std::collections::HashMap;
 use crate::room::Room;
+use crate::room;
 use std::ops::{Index, IndexMut};
+
+#[macro_export]
+macro_rules! house {
+    ( $( $key:tt : $room:expr ),* $(,)? ) => {{
+        let mut house = House::new();
+        $(
+            house.add_room($key, $room);
+        )*
+        house
+    }};
+}
 
 #[derive(Debug)]
 pub struct House {
@@ -26,8 +38,9 @@ impl House {
         House { rooms: Default::default() }
     }
 
-    pub fn add_room(&mut self, name: &str) {
-        self.rooms.insert(name.to_string(), Room::new());
+    pub fn add_room(&mut self, name: &str, room: Option<Room>) {
+        let room = room.unwrap_or_else(Room::new);
+        self.rooms.insert(name.to_string(), room);
     }
 
     pub fn del_room(&mut self, name: &str) {
@@ -40,5 +53,22 @@ impl House {
             self.rooms[name].print_status();
             println!();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add_and_delete_room() {
+        let mut house = House::new();
+        assert!(!house.rooms.contains_key("Test room"));
+
+        house.add_room("Test room", None);
+        assert!(house.rooms.contains_key("Test room"));
+
+        house.del_room("Test room");
+        assert!(!house.rooms.contains_key("Test room"));
     }
 }

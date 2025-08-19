@@ -4,6 +4,17 @@ use crate::smart_device::SmartDevice;
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 
+#[macro_export]
+macro_rules! room {
+    ( $( $key:tt : $device:expr ),* $(,)? ) => {{
+        let mut room = Room::new();
+        $(
+            room.add_device($key, $device);
+        )*
+        room
+    }};
+}
+
 #[derive(Debug)]
 pub struct Room {
     devises: HashMap<String, SmartDevice>,
@@ -73,26 +84,26 @@ mod tests {
 
     #[test]
     fn test_del_device() {
-        let mut rooms = Room::new();
-        rooms.add_device("socket", SmartDevice::new_power_socket(100.0));
-        rooms.del_device("socket");
-        assert_eq!(rooms.devises.len(), 0);
+        let mut room = Room::new();
+        room.add_device("socket", SmartDevice::new_power_socket(100.0));
+        room.del_device("socket");
+        assert_eq!(room.devises.len(), 0);
     }
 
     #[test]
     fn test_del_device_not_exists() {
-        let mut rooms = Room::new();
-        rooms.add_device("socket1", SmartDevice::new_power_socket(100.0));
-        let result = rooms.del_device("socket2");
+        let mut room = Room::new();
+        room.add_device("socket1", SmartDevice::new_power_socket(100.0));
+        let result = room.del_device("socket2");
         assert!(result.is_none());
-        assert!(rooms.devises.contains_key("socket1"));
+        assert!(room.devises.contains_key("socket1"));
     }
 
     #[test]
     fn test_get_device_missing() {
-        let rooms = Room::new();
+        let room = Room::new();
 
-        match rooms.get_device("socket") {
+        match room.get_device("socket") {
             Err(e) => {
                 assert_eq!(e.to_string(), "Device socket not found");
             }
