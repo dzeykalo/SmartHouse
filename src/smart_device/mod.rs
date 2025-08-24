@@ -1,7 +1,8 @@
-use std::fmt::{self, Debug, Formatter};
 use crate::device::Device;
 use crate::power_socket::PowerSocket;
+use crate::reportable::Reportable;
 use crate::thermometer::Thermometer;
+use std::fmt::{self, Debug, Formatter};
 
 pub struct SmartDevice {
     device: Box<dyn Device>,
@@ -50,6 +51,17 @@ impl From<Thermometer> for SmartDevice {
 impl From<PowerSocket> for SmartDevice {
     fn from(device: PowerSocket) -> Self {
         Self::new(Box::new(device))
+    }
+}
+
+impl Reportable for SmartDevice {
+    fn generate_report(&self) -> String {
+        format!(
+            "{:14}{:>6}{:>8}",
+            self.device.get_name(),
+            if self.device.is_on() { "ON" } else { "OFF" },
+            self.device.get_value()
+        )
     }
 }
 

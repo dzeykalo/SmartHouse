@@ -1,14 +1,15 @@
-use std::collections::HashMap;
+use crate::reportable::Reportable;
 use crate::room::Room;
-use crate::room;
-use std::ops::{Index, IndexMut};
+use crate::smart_device::SmartDevice;
+use std::collections::HashMap;
+use std::error::Error;
 
 #[macro_export]
 macro_rules! house {
     ( $( $key:tt : $room:expr ),* $(,)? ) => {{
         let mut house = House::new();
         $(
-            house.add_room($key, $room);
+            house.add_room($key, Option::from($room));
         )*
         house
     }};
@@ -19,40 +20,61 @@ pub struct House {
     rooms: HashMap<String, Room>,
 }
 
-impl Index<&str> for House {
-    type Output = Room;
-
-    fn index(&self, name: &str) -> &Self::Output {
-        &self.rooms.get(name).expect(format!("Room name {} not found", name).as_str())
-    }
-}
-
-impl IndexMut<&str> for House {
-    fn index_mut(&mut self, name: &str) -> &mut Self::Output {
-        self.rooms.get_mut(name).expect(&format!("Room name {} not found", name))
+impl Default for House {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
 impl House {
     pub fn new() -> Self {
-        House { rooms: Default::default() }
+        House {
+            rooms: Default::default(),
+        }
+    }
+
+    pub fn get_room(&self, name: &str) -> Option<&Room> {
+        self.rooms.get(name)
+    }
+
+    pub fn get_mut_room(&mut self, name: &str) -> Option<&mut Room> {
+        self.rooms.get_mut(name)
     }
 
     pub fn add_room(&mut self, name: &str, room: Option<Room>) {
-        let room = room.unwrap_or_else(Room::new);
+        let room = room.unwrap_or_default();
         self.rooms.insert(name.to_string(), room);
     }
 
     pub fn del_room(&mut self, name: &str) {
-        self.rooms.remove(&name.to_string());
+        self.rooms.remove(name);
     }
 
-    pub fn print_status(&self) {
-        for (name, room) in &self.rooms {
-            println!("Room: {}", name);
-            self.rooms[name].print_status();
-            println!();
-        }
+    pub fn get_device(
+        &self,
+        room_name: &str,
+        device_name: &str,
+    ) -> Result<&SmartDevice, Box<dyn Error>> {
+        let room = self
+            .rooms
+            .get(room_name)
+            .ok_or_else(|| format!("Room not found: {}", room_name))?;
+
+        let device = room
+            .get_device(device_name)
+            .ok_or_else(|| format!("Device not found: {}", device_name))?;
+
+        Ok(device)
+    }
+}
+
+impl Reportable for House {
+    fn generate_report(&self) -> String {
+        self.rooms
+            .iter()
+            .map(|(name, device)| format!("Room: {}\n{}\n", name, device.generate_report()))
+            .collect::<Vec<String>>()
+            .join("\n")
     }
 }
 
@@ -70,5 +92,14 @@ mod tests {
 
         house.del_room("Test room");
         assert!(!house.rooms.contains_key("Test room"));
+    }
+
+    #[test]
+    fn test_get_device_room_not_found() {
+        let house = House::new();
+
+        let result = house.get_device("kitchen", "thermometer");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "Room not found: kitchen");
     }
 }
