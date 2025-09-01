@@ -1,20 +1,41 @@
+use smart_house_lib::house;
 use smart_house_lib::house::House;
+use smart_house_lib::reportable::Reportable;
+use smart_house_lib::room;
 use smart_house_lib::room::Room;
 use smart_house_lib::smart_device::SmartDevice;
 
+fn print_report<T: Reportable>(x: &T) {
+    println!("{}\n", x.generate_report());
+}
+
 fn main() {
-    let mut house = House::new(vec![
-        Room::new(vec![
-            SmartDevice::new_thermometer(24.0),
-            SmartDevice::new_power_socket(40.0),
-            SmartDevice::new_power_socket(60.0),
-        ]),
-        Room::new(vec![
-            SmartDevice::new_thermometer(23.0),
-            SmartDevice::new_power_socket(100.0),
-        ]),
-    ]);
-    house[1][0].turn_off();
-    house[1][1].turn_on();
-    house.print_status();
+    let mut house = house!(
+        "living room": room!(
+            "thermometer": SmartDevice::new_thermometer(23.0),
+            "socket1": SmartDevice::new_power_socket(100.0),
+            "socket2": SmartDevice::new_power_socket(60.0)
+        ),
+        "kitchen": room!(
+            "thermometer": SmartDevice::new_thermometer(25.0),
+            "socket1": SmartDevice::new_power_socket(40.0),
+            "socket2": SmartDevice::new_power_socket(60.0)
+        )
+    );
+    print_report(&house);
+
+    house.add_room("hall", None);
+    if let Some(room) = house.get_mut_room("hall") {
+        room.add_device("thermometer", SmartDevice::new_thermometer(25.0));
+    }
+    print_report(house.get_room("hall").unwrap());
+    if let Some(room) = house.get_mut_room("hall") {
+        room.del_device("thermometer");
+    }
+    house.del_room("hall");
+    print_report(&house);
+
+    if house.get_room("hall").is_none() {
+        println!("hall room doesn't exist");
+    }
 }

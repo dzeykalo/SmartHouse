@@ -12,3 +12,4 @@ name = "smart_house"
 path = "src/main.rs"
 
 [dependencies]
+

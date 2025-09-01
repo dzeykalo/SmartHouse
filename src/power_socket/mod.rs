@@ -1,10 +1,12 @@
 use crate::device::Device;
 
+#[derive(Debug)]
 pub enum PowerSocketState {
     OFF,
     ON,
 }
 
+#[derive(Debug)]
 pub struct PowerSocket {
     power: f64,
     state: PowerSocketState,
