@@ -11,5 +11,10 @@ path = "src/lib.rs"
 name = "smart_house"
 path = "src/main.rs"
 
+[[bin]]
+name = "fake_power_socket"
+path = "src/fake_power_socket/mod.rs"
+
 [dependencies]
+tokio = { version = "1.47.1", features = ["full"] }
 
