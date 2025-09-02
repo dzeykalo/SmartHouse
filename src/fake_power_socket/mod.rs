@@ -7,7 +7,15 @@ use std::string;
 use smart_house_lib::power_socket::PowerSocketState;
 
 trait Transport {
-    async fn run(&self) -> Result<(), Box<dyn std::error::Error>>;
+    async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>>;
+}
+
+pub enum FakePowerSocketState {
+    OK,
+    ERR,
+    OFF,
+    ON,
+    EXIT,
 }
 pub struct FakePowerSocket {
     state: PowerSocketState,
@@ -22,32 +30,44 @@ impl FakePowerSocket {
         }
     }
     
-    fn parse(&mut self, buf: &[u8]) -> &str {
-        match str::from_utf8(buf) {
-            Ok(v) => v,
-            Err(e) => "",
-        }
+    fn parse(buf: &[u8]) -> &str {
+        let cmd  = match str::from_utf8(buf) {
+            Ok(s) => s,
+            Err(_) => {
+                return "ERR";
+            }
+        };
+        cmd
     }
 
-    fn cmd(&mut self, cmd: &str) -> String {
-        match cmd {
+    fn pack(&self, state: &str, buf: &mut [u8]) -> &mut [u8] {
+        for (i, c) in state.chars().enumerate() {
+            buf[i] = c as u8;
+        }
+        &mut buf[0..state.len()]
+    }
+
+    fn process(&mut self, buf: &[u8]) -> FakePowerSocketState {
+        match FakePowerSocket::parse(buf) {
             "state" => {
-                let state = match self.state {
-                    PowerSocketState::ON => "ON",
-                    PowerSocketState::OFF => "OFF",
-                };
-                format!("{}", state)
+                match self.state {
+                    PowerSocketState::ON => FakePowerSocketState::ON,
+                    PowerSocketState::OFF => FakePowerSocketState::OFF,
+                }
             },
-            "OFF" => {
+            "off" => {
                 self.state = PowerSocketState::OFF;
-                "OK".to_string()
+                FakePowerSocketState::OK
             }
-            "ON" => {
+            "on" => {
                 self.state = PowerSocketState::ON;
-                "OK".to_string()
+                FakePowerSocketState::OK
+            }
+            "exit" => {
+                FakePowerSocketState::EXIT
             }
             _ => {
-                "ERR".to_string()
+                FakePowerSocketState::ERR
             }
         }
     }
@@ -61,7 +81,7 @@ impl Transport for FakePowerSocket {
         loop {
             let (mut socket, _) = listener.accept().await?;
 
-            tokio::spawn(async move {
+            tokio::spawn(&mut async move {
                 let mut buf = [0; 1024];
 
                 loop {
@@ -75,10 +95,17 @@ impl Transport for FakePowerSocket {
                         }
                     };
 
-                    self.cmd(self.parse(&buf[0..n]));
-                    if let Err(e) = socket.write_all(&buf[0..n]).await {
-                        eprintln!("failed to write to socket; err = {:?}", e);
-                        return;
+                    match self.process(&buf[0..n]) {
+                        FakePowerSocketState::EXIT => {
+                            return;
+                        }
+                        state => {
+                            buf[0] = state as u8;
+                            if let Err(e) = socket.write_all(&buf[0..1]).await {
+                                eprintln!("failed to write to socket; err = {:?}", e);
+                                return;
+                            }
+                        }
                     }
                 }
             });
@@ -100,6 +127,6 @@ async fn main() {
         exit(2);
     }
 
-    let socket = FakePowerSocket::new(port.unwrap());
-    socket.run().await;
+    let mut fake_socket = FakePowerSocket::new(port.unwrap());
+    fake_socket.run().await;
 }
