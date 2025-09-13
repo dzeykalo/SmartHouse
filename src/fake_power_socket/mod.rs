@@ -4,28 +4,23 @@ use tokio::net::TcpListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::process::exit;
 use std::string;
+use std::sync::{Arc, Mutex, MutexGuard};
 use smart_house_lib::power_socket::PowerSocketState;
 
 trait Transport {
     async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>>;
 }
 
-pub enum FakePowerSocketState {
-    OK,
-    ERR,
-    OFF,
-    ON,
-    EXIT,
-}
+
 pub struct FakePowerSocket {
-    state: PowerSocketState,
+    state: Arc<Mutex<PowerSocketState>>,
     port: u16,
 }
 
 impl FakePowerSocket {
     fn new(port: u16) -> Self {
         Self {
-            state: PowerSocketState::OFF,
+            state: Arc::new(Mutex::new(PowerSocketState::OFF)),
             port,
         }
     }
@@ -34,42 +29,40 @@ impl FakePowerSocket {
         let cmd  = match str::from_utf8(buf) {
             Ok(s) => s,
             Err(_) => {
-                return "ERR";
+                eprintln!("Failed to parse command from socket; buf = {:?}", buf);
+                return "error";
             }
         };
-        cmd
+        cmd.trim()
     }
 
-    fn pack(&self, state: &str, buf: &mut [u8]) -> &mut [u8] {
-        for (i, c) in state.chars().enumerate() {
-            buf[i] = c as u8;
-        }
-        &mut buf[0..state.len()]
-    }
-
-    fn process(&mut self, buf: &[u8]) -> FakePowerSocketState {
-        match FakePowerSocket::parse(buf) {
+    fn process(buf: &[u8], state: &mut PowerSocketState) -> String {
+        let cmd = match FakePowerSocket::parse(buf) {
             "state" => {
-                match self.state {
-                    PowerSocketState::ON => FakePowerSocketState::ON,
-                    PowerSocketState::OFF => FakePowerSocketState::OFF,
+                match *state {
+                    PowerSocketState::ON => "on",
+                    PowerSocketState::OFF => "off"
                 }
             },
             "off" => {
-                self.state = PowerSocketState::OFF;
-                FakePowerSocketState::OK
+                *state = PowerSocketState::OFF;
+                "ok"
             }
             "on" => {
-                self.state = PowerSocketState::ON;
-                FakePowerSocketState::OK
+                *state = PowerSocketState::ON;
+                "ok"
             }
             "exit" => {
-                FakePowerSocketState::EXIT
+                "bye"
+            }
+            "" => {
+                ""
             }
             _ => {
-                FakePowerSocketState::ERR
+               "error"
             }
-        }
+        };
+        cmd.to_string()
     }
 }
 
@@ -80,8 +73,9 @@ impl Transport for FakePowerSocket {
 
         loop {
             let (mut socket, _) = listener.accept().await?;
+            let state_clone = Arc::clone(&self.state);
 
-            tokio::spawn(&mut async move {
+            tokio::spawn(async move {
                 let mut buf = [0; 1024];
 
                 loop {
@@ -94,17 +88,13 @@ impl Transport for FakePowerSocket {
                             return;
                         }
                     };
-
-                    match self.process(&buf[0..n]) {
-                        FakePowerSocketState::EXIT => {
+                    
+                    let result = FakePowerSocket::process(&mut buf[0..n], 
+                                                          &mut state_clone.lock().unwrap());
+                    if !result.is_empty() {
+                        if let Err(e) = socket.write_all(result.as_bytes()).await {
+                            eprintln!("failed to write to socket; err = {:?}", e);
                             return;
-                        }
-                        state => {
-                            buf[0] = state as u8;
-                            if let Err(e) = socket.write_all(&buf[0..1]).await {
-                                eprintln!("failed to write to socket; err = {:?}", e);
-                                return;
-                            }
                         }
                     }
                 }
