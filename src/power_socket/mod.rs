@@ -1,4 +1,13 @@
+use std::io::{self, prelude::*, BufReader};
 use crate::device::Device;
+use std::net::TcpStream;
+
+trait Transport {
+    fn connect(&mut self, port: u16);
+    fn send(&mut self, cmd: &str);
+    fn receive(&mut self) -> &str;
+    
+}
 
 #[derive(Debug)]
 pub enum PowerSocketState {
@@ -10,6 +19,7 @@ pub enum PowerSocketState {
 pub struct PowerSocket {
     power: f64,
     state: PowerSocketState,
+    stream: TcpStream
 }
 
 impl Device for PowerSocket {
@@ -43,6 +53,35 @@ impl Device for PowerSocket {
     }
     fn off(&mut self) {
         self.state = PowerSocketState::OFF
+    }
+}
+
+impl Transport for PowerSocket {
+    fn connect(&mut self, port: u16) {
+        self.stream = TcpStream::connect(format!("127.0.0.1:{}", port))
+            .expect("Connection failed");
+    }
+    fn send(&mut self, cmd: &str) {
+        self.stream.write_all(cmd.as_bytes()).expect("Failed to send command");;
+    }
+    fn receive(&mut self) -> &str {
+        let mut buf = [0; 1024];
+        let n = self.stream.read(&mut buf);
+        match n {
+            Ok(n) => {
+                let cmd = match str::from_utf8(&buf[..n]) {
+                   Ok(cmd) => {
+                       cmd
+                   }
+                    Err(e) => {
+                        ""
+                    }
+                }
+            },
+            Err(e) => {
+                ""
+            }
+        }
     }
 }
 
