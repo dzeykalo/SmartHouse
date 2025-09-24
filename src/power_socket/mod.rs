@@ -1,45 +1,33 @@
+use std::cell::RefCell;
 use std::io::{self, prelude::*, BufReader};
 use crate::device::Device;
-use std::net::TcpStream;
+use crate::transport::Transport;
 
-trait Transport {
-    fn connect(&mut self, port: u16);
-    fn send(&mut self, cmd: &str);
-    fn receive(&mut self) -> &str;
-    
-}
-
-#[derive(Debug)]
-pub enum PowerSocketState {
-    OFF,
-    ON,
-}
-
-#[derive(Debug)]
 pub struct PowerSocket {
     power: f64,
-    state: PowerSocketState,
-    stream: TcpStream
+    transport: RefCell<Box<dyn Transport>>,
 }
 
 impl Device for PowerSocket {
-    fn new(w: f64) -> Self {
+    fn new(transport: Box<dyn Transport>, w: f64) -> Self {
         Self {
             power: w,
-            state: PowerSocketState::OFF,
+            transport: RefCell::new(transport),
         }
     }
 
     fn is_on(&self) -> bool {
-        match self.state {
-            PowerSocketState::ON => true,
-            PowerSocketState::OFF => false,
+        let mut transport = self.transport.borrow_mut();
+        transport.send("state");
+        match transport.receive().as_str() {
+            "on" => true,
+            _ => false,
         }
     }
 
     fn get_value(&self) -> f64 {
-        match self.state {
-            PowerSocketState::ON => self.power,
+        match self.is_on() {
+            true => self.power,
             _ => 0.0,
         }
     }
@@ -49,49 +37,21 @@ impl Device for PowerSocket {
     }
 
     fn on(&mut self) {
-        self.state = PowerSocketState::ON
+        self.transport.borrow_mut().send("on");
     }
     fn off(&mut self) {
-        self.state = PowerSocketState::OFF
-    }
-}
-
-impl Transport for PowerSocket {
-    fn connect(&mut self, port: u16) {
-        self.stream = TcpStream::connect(format!("127.0.0.1:{}", port))
-            .expect("Connection failed");
-    }
-    fn send(&mut self, cmd: &str) {
-        self.stream.write_all(cmd.as_bytes()).expect("Failed to send command");;
-    }
-    fn receive(&mut self) -> &str {
-        let mut buf = [0; 1024];
-        let n = self.stream.read(&mut buf);
-        match n {
-            Ok(n) => {
-                let cmd = match str::from_utf8(&buf[..n]) {
-                   Ok(cmd) => {
-                       cmd
-                   }
-                    Err(e) => {
-                        ""
-                    }
-                }
-            },
-            Err(e) => {
-                ""
-            }
-        }
+        self.transport.borrow_mut().send("off");
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    use crate::transport::MockTransport;
+    
     #[test]
     fn test_power_socket_initial_state() {
-        let socket = PowerSocket::new(60.0);
+        let mut socket = PowerSocket::new(Box::new(MockTransport::new()), 60.0);
         assert_eq!(socket.get_name(), "PowerSocket");
         assert_eq!(socket.get_value(), 0.0);
         assert_eq!(socket.is_on(), false);
@@ -99,7 +59,7 @@ mod tests {
 
     #[test]
     fn test_power_socket_turn_on_off() {
-        let mut socket = PowerSocket::new(0.0);
+        let mut socket = PowerSocket::new(Box::new(MockTransport::new()), 0.0);
         socket.on();
         assert_eq!(socket.is_on(), true);
         assert_eq!(socket.get_value(), 0.0);

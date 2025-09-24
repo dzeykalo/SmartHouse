@@ -1,4 +1,5 @@
 use crate::device::Device;
+use crate::transport::Transport;
 
 #[derive(Debug)]
 pub struct Thermometer {
@@ -6,7 +7,7 @@ pub struct Thermometer {
 }
 
 impl Device for Thermometer {
-    fn new(t: f64) -> Self {
+    fn new(transport: Box<dyn Transport>, t: f64) -> Self {
         Self { temperature: t }
     }
 
@@ -30,10 +31,11 @@ impl Device for Thermometer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::transport::MockTransport;
 
     #[test]
     fn test_thermometer() {
-        let thermometer = Thermometer::new(23.0);
+        let thermometer = Thermometer::new(Box::new(MockTransport::new()), 23.0);
         assert_eq!(thermometer.get_name(), "Thermometer");
         assert_eq!(thermometer.get_value(), 23.0);
         assert_eq!(thermometer.is_on(), true);
@@ -41,7 +43,7 @@ mod tests {
 
     #[test]
     fn test_thermometer_turn_on_off() {
-        let mut thermometer = Thermometer::new(25.0);
+        let mut thermometer = Thermometer::new(Box::new(MockTransport::new()), 25.0);
         thermometer.on();
         assert_eq!(thermometer.is_on(), true);
 

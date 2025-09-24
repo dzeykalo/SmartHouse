@@ -1,5 +1,7 @@
+use crate::transport::Transport;
+
 pub trait Device {
-    fn new(value: f64) -> Self
+    fn new(transport: Box<dyn Transport>, w: f64) -> Self
     where
         Self: Sized;
     fn is_on(&self) -> bool;
