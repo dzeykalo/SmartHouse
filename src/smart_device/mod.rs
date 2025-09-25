@@ -75,14 +75,14 @@ mod tests {
     
     #[test]
     fn test_smart_device_from_thermometer() {
-        let thermometer = Thermometer::new(Box::new(MockTransport::new()),23.0);
+        let thermometer = Thermometer::new(Box::new(MockTransport::new("".to_string())),23.0);
         let smart_device = SmartDevice::from(thermometer);
         assert_eq!(smart_device.device.get_value(), 23.0);
     }
 
     #[test]
     fn test_smart_device_from_power_socket() {
-        let power_socket = PowerSocket::new(Box::new(MockTransport::new()),60.0);
+        let power_socket = PowerSocket::new(Box::new(MockTransport::new("".to_string())),60.0);
         let smart_device = SmartDevice::from(power_socket);
         assert_eq!(smart_device.device.get_value(), 0.0);
     }
