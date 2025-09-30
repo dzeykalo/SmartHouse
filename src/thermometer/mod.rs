@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::sync::{Arc, Mutex};
+use std::sync::{atomic, Arc, Mutex};
 use std::thread;
 use crate::device::Device;
 use crate::transport::Transport;
@@ -7,11 +7,14 @@ use crate::transport::Transport;
 // #[derive(Debug)]
 pub struct Thermometer {
     temperature: Arc<Mutex<f64>>,
-    handle: thread::JoinHandle<()>
+    handle: thread::JoinHandle<()>,
+    alive: Arc<atomic::AtomicBool>
 }
 
-impl Thermometer {
-    
+impl Drop for Thermometer {
+    fn drop(&mut self) {
+        self.alive.store(false, atomic::Ordering::Relaxed);
+    }
 }
 
 impl Device for Thermometer {
@@ -20,21 +23,26 @@ impl Device for Thermometer {
         let t = RefCell::new(transport);
 
         let temp_clone = Arc::clone(&temperature);
+        let alive = Arc::new(atomic::AtomicBool::new(true));
+        let alive_clone = Arc::clone(&alive);
         let handle = thread::spawn(move || {
-            let mut tt = t.borrow_mut();
-            let temperature = match tt.receive().as_str() {
-                "" => 0.0f64,
-                s => s.parse().unwrap_or_else(|e| {
-                    eprintln!("Error parsing number: {}", e);
-                    0.0f64
-                }),
-            };
-            let mut num = temp_clone.lock().unwrap();
-            *num = temperature;
+            while alive_clone.load(atomic::Ordering::Relaxed) {
+                let mut tt = t.borrow_mut();
+                let temperature = match tt.receive().as_str() {
+                    "" => 0.0f64,
+                    s => s.parse().unwrap_or_else(|e| {
+                        eprintln!("Error parsing number: {}", e);
+                        0.0f64
+                    }),
+                };
+                let mut num = temp_clone.lock().unwrap();
+                *num = temperature;
+            }
         });
         Self {
             temperature,
             handle,
+            alive
         }
     }
 

@@ -5,7 +5,11 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::process::exit;
 use std::string;
 use std::sync::{Arc, Mutex, MutexGuard};
-use smart_house_lib::power_socket::PowerSocketState;
+
+enum PowerSocketState {
+    ON,
+    OFF
+}
 
 trait Transport {
     async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>>;
