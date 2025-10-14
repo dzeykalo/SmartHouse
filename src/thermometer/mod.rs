@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::sync::{atomic, Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 use crate::device::Device;
 use crate::transport::Transport;
 
@@ -18,7 +19,7 @@ impl Drop for Thermometer {
 }
 
 impl Device for Thermometer {
-    fn new(transport: Box<dyn Transport + Send>, t: f64) -> Self {
+    fn new(transport: Box<dyn Transport + Send>) -> Self {
         let temperature = Arc::new(Mutex::new(0.0));
         let t = RefCell::new(transport);
 
@@ -35,8 +36,11 @@ impl Device for Thermometer {
                         0.0f64
                     }),
                 };
-                let mut num = temp_clone.lock().unwrap();
-                *num = temperature;
+                {
+                    let mut num = temp_clone.lock().unwrap();
+                    *num = temperature;
+                }
+                thread::sleep(Duration::from_secs(1));
             }
         });
         Self {
@@ -67,22 +71,21 @@ impl Device for Thermometer {
 mod tests {
     use super::*;
     use crate::transport::MockTransport;
-
-    #[test]
-    fn test_thermometer() {
-        let thermometer = Thermometer::new(Box::new(MockTransport::new("".to_string())), 23.0);
-        assert_eq!(thermometer.get_name(), "Thermometer");
-        assert_eq!(thermometer.get_value(), 23.0);
-        assert_eq!(thermometer.is_on(), true);
-    }
-
+    
     #[test]
     fn test_thermometer_turn_on_off() {
-        let mut thermometer = Thermometer::new(Box::new(MockTransport::new("".to_string())), 25.0);
+        let mut thermometer = Thermometer::new(Box::new(MockTransport::new("23.0".to_string())));
         thermometer.on();
         assert_eq!(thermometer.is_on(), true);
 
         thermometer.off();
         assert_eq!(thermometer.is_on(), true);
+    }
+    
+    #[test]
+    fn test_thermometer_get_value() {
+        let thermometer = Thermometer::new(Box::new(MockTransport::new("25.0".to_string())));
+        thread::sleep(Duration::from_secs(1));
+        assert_eq!(thermometer.get_value(), 25.0);
     }
 }

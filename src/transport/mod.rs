@@ -63,7 +63,6 @@ impl Transport for UdpTransport {
         let mut buf = [0; 1024];
         match self.socket.recv_from(&mut buf) {
             Ok((n, src)) => {
-                println!("Получено {} байт от {}: {:?}", n, src, &buf[..n]);
                 match std::str::from_utf8(&buf[..n]) {
                     Ok(s) => s.to_string(),
                     Err(_) => String::new(),
