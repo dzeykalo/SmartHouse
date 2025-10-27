@@ -10,7 +10,7 @@ fn print_report<T: Reportable>(x: &T) {
 }
 
 fn main() {
-    let mut house = house!(
+    let house = house!(
         "living room": room!(
             "thermometer": SmartDevice::new_thermometer(),
             "socket1": SmartDevice::new_power_socket(),
@@ -24,18 +24,18 @@ fn main() {
     );
     print_report(&house);
 
-    house.add_room("hall", None);
-    if let Some(room) = house.get_mut_room("hall") {
-        room.add_device("thermometer", SmartDevice::new_thermometer());
-    }
-    print_report(house.get_room("hall").unwrap());
-    if let Some(room) = house.get_mut_room("hall") {
-        room.del_device("thermometer");
-    }
-    house.del_room("hall");
-    print_report(&house);
-
-    if house.get_room("hall").is_none() {
-        println!("hall room doesn't exist");
-    }
+    // house.add_room("hall", None);
+    // if let Some(room) = house.get_mut_room("hall") {
+    //     room.add_device("thermometer", SmartDevice::new_thermometer());
+    // }
+    // print_report(house.get_room("hall").unwrap());
+    // if let Some(room) = house.get_mut_room("hall") {
+    //     room.del_device("thermometer");
+    // }
+    // house.del_room("hall");
+    // print_report(&house);
+    // 
+    // if house.get_room("hall").is_none() {
+    //     println!("hall room doesn't exist");
+    // }
 }

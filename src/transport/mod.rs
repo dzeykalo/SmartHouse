@@ -10,21 +10,30 @@ pub trait Transport {
 }
 
 pub struct TcpTransport {
-    stream: TcpStream,
+    address: String,
+    stream: Option<TcpStream>,
 }
 
 impl TcpTransport {
-    pub fn new(ip: &str, port: u16) -> Self {
-        let stream = TcpStream::connect(format!("{}:{}", ip, port)).unwrap();
+    pub fn new(host: &str, port: u16) -> Self {
+        let address = format!("{}:{}", host, port);
+        let stream = TcpStream::connect(&address);
         Self {
-            stream,
+            address,
+            stream: stream.ok(),
         }
     }
 }
 
 impl Transport for TcpTransport {
     fn send(&mut self, cmd: &str) {
-        self.stream.write_all(cmd.as_bytes()).unwrap();
+        for _ in 0..1 {
+            if let Some(stream) = &mut self.stream {
+                stream.write_all(cmd.as_bytes()).unwrap();
+            } else {
+                self.stream = TcpStream::connect(&self.address).ok();
+            }
+        }
     }
 
     fn receive(&mut self) -> String {

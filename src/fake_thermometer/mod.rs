@@ -5,8 +5,6 @@ use std::thread::sleep;
 use std::time::Duration;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use serde_json::Result;
 
 #[derive(Serialize, Deserialize)]
 struct Config {
@@ -22,11 +20,11 @@ fn main() {
         exit(1);
     }
 
-    let config_file_path = args[1].to_string();
-    let data = match fs::read_to_string(args[1].to_string()) {
+    let config_file_path = args[1].clone();
+    let data = match fs::read_to_string(config_file_path.clone()) {
         Ok(data) => data,
         Err(e) => {
-            eprintln!("Не удалось прочитать файл '{}': {}", config_file_path, e);
+            eprintln!("Failed to read file '{}': {}", config_file_path, e);
             exit(1);
         }
     };
@@ -34,7 +32,7 @@ fn main() {
     let cfg: Config = match serde_json::from_str(&data) {
         Ok(cfg) => cfg,
         Err(e) => {
-            eprintln!("Ошибка парсинга JSON в файле '{}': {}", config_file_path, e);
+            eprintln!("Error parsing JSON file '{}': {}", config_file_path, e);
             exit(1);
         }
     };
