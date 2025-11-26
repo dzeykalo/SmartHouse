@@ -2,7 +2,7 @@ use crate::device::Device;
 use crate::power_socket::PowerSocket;
 use crate::reportable::Reportable;
 use crate::thermometer::Thermometer;
-use crate::transport::TcpTransport;
+use crate::transport::{TcpTransport, UdpTransport};
 use std::fmt::{self, Debug, Formatter};
 
 pub struct SmartDevice {
@@ -14,13 +14,13 @@ impl SmartDevice {
         Self { device }
     }
 
-    pub fn new_thermometer() -> Self {
-        let transport = TcpTransport::new("192.168.1.100", 8080);
+    pub fn new_thermometer(ip: &str, port: u16) -> Self {
+        let transport = UdpTransport::new(ip, port);
         Self::new(Box::new(Thermometer::new(Box::new(transport))))
     }
 
-    pub fn new_power_socket() -> Self {
-        let transport = TcpTransport::new("192.168.1.100", 8080);
+    pub fn new_power_socket(ip: &str, port: u16) -> Self {
+        let transport = TcpTransport::new(ip, port);
         Self::new(Box::new(PowerSocket::new(Box::new(transport))))
     }
 
@@ -37,9 +37,9 @@ impl Debug for SmartDevice {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{:14}{:>6}{:>8}",
+            "{:14}{:14}{:>6}",
             self.device.get_name(),
-            if self.device.is_on() { "ON" } else { "OFF" },
+            self.device.get_state(),
             self.device.get_value()
         )
     }
@@ -60,9 +60,9 @@ impl From<PowerSocket> for SmartDevice {
 impl Reportable for SmartDevice {
     fn generate_report(&self) -> String {
         format!(
-            "{:14}{:>6}{:>8}",
+            "{:14}{:14}{:>6}",
             self.device.get_name(),
-            if self.device.is_on() { "ON" } else { "OFF" },
+            self.device.get_state(),
             self.device.get_value()
         )
     }

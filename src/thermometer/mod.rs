@@ -62,6 +62,10 @@ impl Device for Thermometer {
         String::from("Thermometer")
     }
 
+    fn get_state(&self) -> String {
+        "ON".to_string()
+    }
+
     fn on(&mut self) {}
 
     fn off(&mut self) {}

@@ -8,6 +8,8 @@ pub trait Device {
     fn get_value(&self) -> f64;
 
     fn get_name(&self) -> String;
+    
+    fn get_state(&self) -> String;
 
     fn on(&mut self);
 

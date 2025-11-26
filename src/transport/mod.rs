@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+use tokio::io::AsyncReadExt;
 
 pub trait Transport {
     fn send(&mut self, cmd: &str);
@@ -37,14 +38,16 @@ impl Transport for TcpTransport {
     }
 
     fn receive(&mut self) -> String {
-        let mut buf = [0; 1024];
-        match self.stream.read(&mut buf) {
-            Ok(n) => match std::str::from_utf8(&buf[..n]) {
-                Ok(s) => s.to_string(),
-                Err(_) => String::new(),
-            },
-            Err(_) => String::new(),
+        let mut result = String::new();
+        if let Some(stream) = &mut self.stream {
+            let mut buf = [0; 1024];
+            let n = stream.read(&mut buf).unwrap_or_default();
+            match std::str::from_utf8(&buf[..n]) {
+                Ok(s) => result = s.to_string(),
+                Err(_) => {}
+            }
         }
+        result
     }
 }
 
@@ -56,7 +59,7 @@ pub struct UdpTransport {
 impl UdpTransport {
     pub fn new(ip: &str, port: u16) -> Self {
         let socket = std::net::UdpSocket::bind(format!("{}:{}", ip, port)).expect(
-            "could not bind to socket",
+            "couldn't bind to address",
         );
         Self {
             socket,

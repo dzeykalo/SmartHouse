@@ -51,7 +51,7 @@ impl Room {
 impl Reportable for Room {
     fn generate_report(&self) -> String {
         format!(
-            "{:14}{:14}{:>6}{:>8}\n{}",
+            "{:14}{:14}{:14}{:>6}\n{}",
             "Name",
             "Type",
             "Status",

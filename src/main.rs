@@ -12,17 +12,20 @@ fn print_report<T: Reportable>(x: &T) {
 fn main() {
     let house = house!(
         "living room": room!(
-            "thermometer": SmartDevice::new_thermometer(),
-            "socket1": SmartDevice::new_power_socket(),
-            "socket2": SmartDevice::new_power_socket()
+            "thermometer": SmartDevice::new_thermometer("127.0.0.1", 5000),
+            "socket1": SmartDevice::new_power_socket("127.0.0.1", 6000),
         ),
         "kitchen": room!(
-            "thermometer": SmartDevice::new_thermometer(),
-            "socket1": SmartDevice::new_power_socket(),
-            "socket2": SmartDevice::new_power_socket()
+            "thermometer": SmartDevice::new_thermometer("127.0.0.1", 5001),
+            "socket1": SmartDevice::new_power_socket("127.0.0.1", 6001),
         )
     );
-    print_report(&house);
+    loop {
+        println!("\nPlease press enter to show report...");
+        if std::io::stdin().read_line(&mut String::new()).is_ok() {
+            print_report(&house);
+        }
+    }
 
     // house.add_room("hall", None);
     // if let Some(room) = house.get_mut_room("hall") {

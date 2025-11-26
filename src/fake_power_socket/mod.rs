@@ -1,10 +1,7 @@
-use std::fmt::Debug;
-use std::io::{Read, Write};
 use tokio::net::TcpListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::process::exit;
-use std::string;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex};
 
 enum PowerSocketState {
     ON,
@@ -72,7 +69,7 @@ impl FakePowerSocket {
 
 impl Transport for FakePowerSocket {
     async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let listener = TcpListener::bind(format!("127.0.0.1:{}", self.port)).await?;
+        let listener = TcpListener::bind(format!("0.0.0.0:{}", self.port)).await?;
         println!("FakePowerSocket running on port {}", self.port);
 
         loop {
@@ -122,5 +119,5 @@ async fn main() {
     }
 
     let mut fake_socket = FakePowerSocket::new(port.unwrap());
-    fake_socket.run().await;
+    fake_socket.run().await.expect("Error: FakePowerSocket");
 }

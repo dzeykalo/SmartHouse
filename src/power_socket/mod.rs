@@ -36,6 +36,16 @@ impl Device for PowerSocket {
         String::from("PowerSocket")
     }
 
+    fn get_state(&self) -> String {
+        let mut transport = self.transport.borrow_mut();
+        transport.send("state");
+        let state = transport.receive();
+        if state.is_empty() {
+            return "DISCONNECTED".to_string();
+        }
+        state.to_ascii_uppercase()
+    }
+
     fn on(&mut self) {
         self.transport.borrow_mut().send("on");
     }
@@ -51,7 +61,7 @@ mod tests {
     
     #[test]
     fn test_power_socket_initial_state() {
-        let mut socket = PowerSocket::new(Box::new(MockTransport::new("".to_string())));
+        let socket = PowerSocket::new(Box::new(MockTransport::new("".to_string())));
         assert_eq!(socket.get_name(), "PowerSocket");
         assert_eq!(socket.get_value(), 0.0);
         assert_eq!(socket.is_on(), false);
