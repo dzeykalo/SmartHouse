@@ -1,13 +1,8 @@
 use std::net::TcpStream;
 use std::io::prelude::*;
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use tokio::io::AsyncReadExt;
 
 pub trait Transport {
-    fn send(&mut self, cmd: &str);
-    fn receive(&mut self) -> String;
+    fn communicate(&mut self, cmd: &str) -> String;
 }
 
 pub struct TcpTransport {
@@ -27,27 +22,24 @@ impl TcpTransport {
 }
 
 impl Transport for TcpTransport {
-    fn send(&mut self, cmd: &str) {
-        for _ in 0..1 {
-            if let Some(stream) = &mut self.stream {
-                stream.write_all(cmd.as_bytes()).unwrap();
-            } else {
-                self.stream = TcpStream::connect(&self.address).ok();
-            }
+    fn communicate(&mut self, cmd: &str) -> String {
+        if self.stream.is_none() {
+            self.stream = TcpStream::connect(&self.address).ok();
         }
-    }
-
-    fn receive(&mut self) -> String {
-        let mut result = String::new();
         if let Some(stream) = &mut self.stream {
-            let mut buf = [0; 1024];
-            let n = stream.read(&mut buf).unwrap_or_default();
-            match std::str::from_utf8(&buf[..n]) {
-                Ok(s) => result = s.to_string(),
-                Err(_) => {}
+            if stream.write_all(cmd.as_bytes()).is_ok() {
+                let mut buf = [0; 1024];
+                if let Ok(n) = stream.read(&mut buf) {
+                    if let Ok(s) = std::str::from_utf8(&buf[..n]) {
+                        if !s.is_empty() {
+                            return s.to_string();
+                        }
+                    }
+                }
             }
         }
-        result
+        self.stream = None;
+        "disconnected".to_string()
     }
 }
 
@@ -68,23 +60,15 @@ impl UdpTransport {
 }
 
 impl Transport for UdpTransport {
-    fn send(&mut self, cmd: &str) {
-        todo!()
-    }
-    fn receive(&mut self) -> String {
+    fn communicate(&mut self, _cmd: &str) -> String {
         let mut buf = [0; 1024];
-        match self.socket.recv_from(&mut buf) {
-            Ok((n, src)) => {
-                match std::str::from_utf8(&buf[..n]) {
-                    Ok(s) => s.to_string(),
-                    Err(_) => String::new(),
-                }
-            },
-            Err(e) => {
-                eprintln!("Receive error: {}", e);
-                String::new()
+        if let Ok((n, _)) = self.socket.recv_from(&mut buf) {
+            match std::str::from_utf8(&buf[..n]) {
+                Ok(s) => return s.to_string(),
+                Err(_) => {}
             }
         }
+        String::new()
     }
 }
 
@@ -99,15 +83,12 @@ impl MockTransport {
 }
 
 impl Transport for MockTransport {
-    fn send(&mut self, cmd: &str) {
+    fn communicate(&mut self, cmd: &str) -> String {
         match cmd {
             "on" => self.value = "on".to_string(),
             "off" => self.value = "off".to_string(),
             _ => {}
         }
-    }
-
-    fn receive(&mut self) -> String {
-        self.value.clone()
+        self.value.to_string()
     }
 }

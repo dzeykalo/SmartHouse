@@ -4,7 +4,6 @@ pub trait Device {
     fn new(transport: Box<dyn Transport + Send>) -> Self
     where
         Self: Sized;
-    fn is_on(&self) -> bool;
     fn get_value(&self) -> f64;
 
     fn get_name(&self) -> String;

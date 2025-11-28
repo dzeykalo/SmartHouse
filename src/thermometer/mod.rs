@@ -29,14 +29,13 @@ impl Device for Thermometer {
         let handle = thread::spawn(move || {
             while alive_clone.load(atomic::Ordering::Relaxed) {
                 let mut tt = t.borrow_mut();
-                let temperature = match tt.receive().as_str() {
-                    "" => 0.0f64,
+                let temperature = match tt.communicate("") {
                     s => s.parse().unwrap_or_else(|e| {
                         eprintln!("Error parsing number: {}", e);
                         0.0f64
                     }),
                 };
-                {
+                if temperature != 0.0f64 {
                     let mut num = temp_clone.lock().unwrap();
                     *num = temperature;
                 }
@@ -48,10 +47,6 @@ impl Device for Thermometer {
             handle,
             alive
         }
-    }
-
-    fn is_on(&self) -> bool {
-        true
     }
 
     fn get_value(&self) -> f64 {
@@ -75,16 +70,6 @@ impl Device for Thermometer {
 mod tests {
     use super::*;
     use crate::transport::MockTransport;
-    
-    #[test]
-    fn test_thermometer_turn_on_off() {
-        let mut thermometer = Thermometer::new(Box::new(MockTransport::new("23.0".to_string())));
-        thermometer.on();
-        assert_eq!(thermometer.is_on(), true);
-
-        thermometer.off();
-        assert_eq!(thermometer.is_on(), true);
-    }
     
     #[test]
     fn test_thermometer_get_value() {

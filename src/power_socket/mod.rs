@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::io::{self, prelude::*, BufReader};
 use crate::device::Device;
 use crate::transport::Transport;
 
@@ -16,18 +15,9 @@ impl Device for PowerSocket {
         }
     }
 
-    fn is_on(&self) -> bool {
-        let mut transport = self.transport.borrow_mut();
-        transport.send("state");
-        match transport.receive().as_str() {
-            "on" => true,
-            _ => false,
-        }
-    }
-
     fn get_value(&self) -> f64 {
-        match self.is_on() {
-            true => self.power,
+        match self.get_state().as_str() {
+            "ON" => self.power,
             _ => 0.0,
         }
     }
@@ -38,19 +28,14 @@ impl Device for PowerSocket {
 
     fn get_state(&self) -> String {
         let mut transport = self.transport.borrow_mut();
-        transport.send("state");
-        let state = transport.receive();
-        if state.is_empty() {
-            return "DISCONNECTED".to_string();
-        }
-        state.to_ascii_uppercase()
+        transport.communicate("state").to_ascii_uppercase()
     }
 
     fn on(&mut self) {
-        self.transport.borrow_mut().send("on");
+        self.transport.borrow_mut().communicate("on");
     }
     fn off(&mut self) {
-        self.transport.borrow_mut().send("off");
+        self.transport.borrow_mut().communicate("off");
     }
 }
 
@@ -61,21 +46,21 @@ mod tests {
     
     #[test]
     fn test_power_socket_initial_state() {
-        let socket = PowerSocket::new(Box::new(MockTransport::new("".to_string())));
+        let socket = PowerSocket::new(Box::new(MockTransport::new("OFF".to_string())));
         assert_eq!(socket.get_name(), "PowerSocket");
         assert_eq!(socket.get_value(), 0.0);
-        assert_eq!(socket.is_on(), false);
+        assert_eq!(socket.get_state(), "OFF");
     }
 
     #[test]
     fn test_power_socket_turn_on_off() {
-        let mut socket = PowerSocket::new(Box::new(MockTransport::new("".to_string())));
+        let mut socket = PowerSocket::new(Box::new(MockTransport::new("ON".to_string())));
         socket.on();
-        assert_eq!(socket.is_on(), true);
+        assert_eq!(socket.get_state(), "ON");
         assert_eq!(socket.get_value(), 0.0);
 
         socket.off();
-        assert_eq!(socket.is_on(), false);
+        assert_eq!(socket.get_state(), "OFF");
         assert_eq!(socket.get_value(), 0.0);
     }
 }
