@@ -42,12 +42,12 @@ fn main() {
 
     let mut house = house!(
         "living room": room!(
-            "thermometer": SmartDevice::new_thermometer("127.0.0.1", get_port_then_increment(&mut therm_port)),
-            "socket1": SmartDevice::new_power_socket("127.0.0.1", get_port_then_increment(&mut socket_port)),
+            "thermo_5000": SmartDevice::new_thermometer("127.0.0.1", get_port_then_increment(&mut therm_port)),
+            "socket_6000": SmartDevice::new_power_socket("127.0.0.1", get_port_then_increment(&mut socket_port)),
         ),
         "kitchen": room!(
-            "thermometer": SmartDevice::new_thermometer("127.0.0.1", get_port_then_increment(&mut therm_port)),
-            "socket1": SmartDevice::new_power_socket("127.0.0.1", get_port_then_increment(&mut socket_port)),
+            "thermo_5001": SmartDevice::new_thermometer("127.0.0.1", get_port_then_increment(&mut therm_port)),
+            "socket_6000": SmartDevice::new_power_socket("127.0.0.1", get_port_then_increment(&mut socket_port)),
         )
     );
 
