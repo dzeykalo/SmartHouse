@@ -46,6 +46,10 @@ impl Room {
     pub fn del_device(&mut self, name: &str) -> Option<SmartDevice> {
         self.devises.remove(name)
     }
+    
+    pub fn get_devices_names(&self) -> Vec<String> {
+        self.devises.keys().cloned().collect()
+    }
 }
 
 impl Reportable for Room {

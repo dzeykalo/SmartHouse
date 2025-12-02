@@ -66,6 +66,10 @@ impl House {
 
         Ok(device)
     }
+
+    pub fn get_rooms_names(&self) -> Vec<String> {
+        self.rooms.keys().map(|k| k.to_string()).collect()
+    }
 }
 
 impl Reportable for House {
