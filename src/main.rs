@@ -57,9 +57,11 @@ fn main() {
         println!("\nCommands:");
         println!("  1 - Add device");
         println!("  2 - Remove device");
-        println!("  3 - Show report");
+        println!("  3 - Tern on device");
+        println!("  4 - Tern off device");
+        println!("  5 - Show report");
         println!("  0 - Exit");
-        print!("\nEnter command (0-3): ");
+        print!("\nEnter command (0-5): ");
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
@@ -130,6 +132,44 @@ fn main() {
                 }
             }
             3 => {
+                // Tern on
+                let room_name = get_name(&house.get_rooms_names());
+                if room_name.is_empty() {
+                    println!("Invalid room number.");
+                    continue;
+                }
+                if let Some(room) = house.get_mut_room(&room_name) {
+                    let device_name= get_name(&room.get_devices_names());
+                    if device_name.is_empty() {
+                        println!("Invalid device number.");
+                        continue;
+                    }
+                    if let Some(device) = room.get_mut_device(&device_name) {
+                        device.turn_on();
+                        println!("Device '{}' turned on.", device_name);
+                    }
+                }
+            }
+            4 => {
+                // Tern off
+                let room_name = get_name(&house.get_rooms_names());
+                if room_name.is_empty() {
+                    println!("Invalid room number.");
+                    continue;
+                }
+                if let Some(room) = house.get_mut_room(&room_name) {
+                    let device_name= get_name(&room.get_devices_names());
+                    if device_name.is_empty() {
+                        println!("Invalid device number.");
+                        continue;
+                    }
+                    if let Some(device) = room.get_mut_device(&device_name) {
+                        device.turn_off();
+                        println!("Device '{}' turned on.", device_name);
+                    }
+                }
+            }
+            5 => {
                 print_report(&house);
             }
             0 => {
@@ -137,7 +177,7 @@ fn main() {
                 break;
             }
             _ => {
-                println!("Invalid command. Use 0-3.");
+                println!("Invalid command. Use 0-5.");
             }
         }
     }
