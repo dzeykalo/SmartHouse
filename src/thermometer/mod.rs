@@ -26,8 +26,8 @@ impl Drop for Thermometer {
 }
 
 impl Device for Thermometer {
-    fn new(transport: Box<dyn Transport + Send>) -> Self {
-        let temperature = Arc::new(Mutex::new(0.0));
+    fn new(transport: Box<dyn Transport + Send>, t: f64) -> Self {
+        let temperature = Arc::new(Mutex::new(t));
         let alive = Arc::new(atomic::AtomicBool::new(true));
 
         let temp_clone = Arc::clone(&temperature);
@@ -91,14 +91,16 @@ mod tests {
 
     #[test]
     fn test_thermometer_get_value() {
-        let thermometer = Thermometer::new(Box::new(MockTransport::new("25.0".to_string())));
+        let thermometer =
+            Thermometer::new(Box::new(MockTransport::new("25.0".to_string())), 0.0f64);
         thread::sleep(Duration::from_secs(1));
         assert_eq!(thermometer.get_value(), 25.0);
     }
 
     #[test]
     fn test_thermometer_off() {
-        let mut thermometer = Thermometer::new(Box::new(MockTransport::new("25.0".to_string())));
+        let mut thermometer =
+            Thermometer::new(Box::new(MockTransport::new("25.0".to_string())), 0.0f64);
         thread::sleep(Duration::from_secs(1));
         thermometer.off();
         assert_eq!(thermometer.get_value(), 0.0);

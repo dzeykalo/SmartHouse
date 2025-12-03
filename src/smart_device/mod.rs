@@ -14,14 +14,14 @@ impl SmartDevice {
         Self { device }
     }
 
-    pub fn new_thermometer(ip: &str, port: u16) -> Self {
+    pub fn new_thermometer(ip: &str, port: u16, temperature: f64) -> Self {
         let transport = UdpTransport::new(ip, port);
-        Self::new(Box::new(Thermometer::new(Box::new(transport))))
+        Self::new(Box::new(Thermometer::new(Box::new(transport), temperature)))
     }
 
-    pub fn new_power_socket(ip: &str, port: u16) -> Self {
+    pub fn new_power_socket(ip: &str, port: u16, wattage: f64) -> Self {
         let transport = TcpTransport::new(ip, port);
-        Self::new(Box::new(PowerSocket::new(Box::new(transport))))
+        Self::new(Box::new(PowerSocket::new(Box::new(transport), wattage)))
     }
 
     pub fn turn_on(&mut self) {
@@ -75,14 +75,14 @@ mod tests {
 
     #[test]
     fn test_smart_device_from_thermometer() {
-        let thermometer = Thermometer::new(Box::new(MockTransport::new("".to_string())));
+        let thermometer = Thermometer::new(Box::new(MockTransport::new("".to_string())), 23.0f64);
         let smart_device = SmartDevice::from(thermometer);
         assert_eq!(smart_device.device.get_value(), 23.0);
     }
 
     #[test]
     fn test_smart_device_from_power_socket() {
-        let power_socket = PowerSocket::new(Box::new(MockTransport::new("".to_string())));
+        let power_socket = PowerSocket::new(Box::new(MockTransport::new("".to_string())), 60.0f64);
         let smart_device = SmartDevice::from(power_socket);
         assert_eq!(smart_device.device.get_value(), 0.0);
     }

@@ -1,7 +1,7 @@
 use crate::transport::Transport;
 
 pub trait Device {
-    fn new(transport: Box<dyn Transport + Send>) -> Self
+    fn new(transport: Box<dyn Transport + Send>, value: f64) -> Self
     where
         Self: Sized;
     fn get_value(&self) -> f64;

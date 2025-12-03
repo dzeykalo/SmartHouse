@@ -8,9 +8,9 @@ pub struct PowerSocket {
 }
 
 impl Device for PowerSocket {
-    fn new(transport: Box<dyn Transport + Send>) -> Self {
+    fn new(transport: Box<dyn Transport + Send>, w: f64) -> Self {
         Self {
-            power: 0.00,
+            power: w,
             transport: RefCell::new(transport),
         }
     }
@@ -46,7 +46,7 @@ mod tests {
 
     #[test]
     fn test_power_socket_initial_state() {
-        let socket = PowerSocket::new(Box::new(MockTransport::new("OFF".to_string())));
+        let socket = PowerSocket::new(Box::new(MockTransport::new("OFF".to_string())), 60.0);
         assert_eq!(socket.get_name(), "PowerSocket");
         assert_eq!(socket.get_value(), 0.0);
         assert_eq!(socket.get_state(), "OFF");
@@ -54,10 +54,10 @@ mod tests {
 
     #[test]
     fn test_power_socket_turn_on_off() {
-        let mut socket = PowerSocket::new(Box::new(MockTransport::new("ON".to_string())));
+        let mut socket = PowerSocket::new(Box::new(MockTransport::new("ON".to_string())), 60.0);
         socket.on();
         assert_eq!(socket.get_state(), "ON");
-        assert_eq!(socket.get_value(), 0.0);
+        assert_eq!(socket.get_value(), 60.0);
 
         socket.off();
         assert_eq!(socket.get_state(), "OFF");

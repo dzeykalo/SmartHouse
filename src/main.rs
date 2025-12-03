@@ -42,12 +42,12 @@ fn main() {
 
     let mut house = house!(
         "living room": room!(
-            "thermo_5000": SmartDevice::new_thermometer("127.0.0.1", get_port_then_increment(&mut therm_port)),
-            "socket_6000": SmartDevice::new_power_socket("127.0.0.1", get_port_then_increment(&mut socket_port)),
+            "thermo_5000": SmartDevice::new_thermometer("127.0.0.1", get_port_then_increment(&mut therm_port), 0.0f64),
+            "socket_6000": SmartDevice::new_power_socket("127.0.0.1", get_port_then_increment(&mut socket_port), 60.0f64),
         ),
         "kitchen": room!(
-            "thermo_5001": SmartDevice::new_thermometer("127.0.0.1", get_port_then_increment(&mut therm_port)),
-            "socket_6000": SmartDevice::new_power_socket("127.0.0.1", get_port_then_increment(&mut socket_port)),
+            "thermo_5001": SmartDevice::new_thermometer("127.0.0.1", get_port_then_increment(&mut therm_port), 0.0f64),
+            "socket_6001": SmartDevice::new_power_socket("127.0.0.1", get_port_then_increment(&mut socket_port), 40.0f64),
         )
     );
 
@@ -94,14 +94,17 @@ fn main() {
                     1 => {
                         let port = get_port_then_increment(&mut therm_port);
                         let device_name = format!("thermo_{}", port);
-                        (device_name, SmartDevice::new_thermometer("127.0.0.1", port))
+                        (
+                            device_name,
+                            SmartDevice::new_thermometer("127.0.0.1", port, 0.0f64),
+                        )
                     }
                     2 => {
                         let port = get_port_then_increment(&mut socket_port);
                         let device_name = format!("socket_{}", port);
                         (
                             device_name,
-                            SmartDevice::new_power_socket("127.0.0.1", port),
+                            SmartDevice::new_power_socket("127.0.0.1", port, 50.0f64),
                         )
                     }
                     _ => {
