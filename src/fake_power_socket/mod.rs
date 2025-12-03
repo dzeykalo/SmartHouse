@@ -1,17 +1,16 @@
-use tokio::net::TcpListener;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::process::exit;
 use std::sync::{Arc, Mutex};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpListener;
 
 enum PowerSocketState {
-    ON,
-    OFF
+    On,
+    Off,
 }
 
 trait Transport {
     async fn run(&mut self) -> Result<(), Box<dyn std::error::Error>>;
 }
-
 
 pub struct FakePowerSocket {
     state: Arc<Mutex<PowerSocketState>>,
@@ -21,13 +20,13 @@ pub struct FakePowerSocket {
 impl FakePowerSocket {
     fn new(port: u16) -> Self {
         Self {
-            state: Arc::new(Mutex::new(PowerSocketState::OFF)),
+            state: Arc::new(Mutex::new(PowerSocketState::Off)),
             port,
         }
     }
-    
+
     fn parse(buf: &[u8]) -> &str {
-        let cmd  = match str::from_utf8(buf) {
+        let cmd = match str::from_utf8(buf) {
             Ok(s) => s,
             Err(_) => {
                 eprintln!("Failed to parse command from socket; buf = {:?}", buf);
@@ -39,29 +38,21 @@ impl FakePowerSocket {
 
     fn process(buf: &[u8], state: &mut PowerSocketState) -> String {
         let cmd = match FakePowerSocket::parse(buf) {
-            "state" => {
-                match *state {
-                    PowerSocketState::ON => "on",
-                    PowerSocketState::OFF => "off"
-                }
+            "state" => match *state {
+                PowerSocketState::On => "on",
+                PowerSocketState::Off => "off",
             },
             "off" => {
-                *state = PowerSocketState::OFF;
+                *state = PowerSocketState::Off;
                 "ok"
             }
             "on" => {
-                *state = PowerSocketState::ON;
+                *state = PowerSocketState::On;
                 "ok"
             }
-            "exit" => {
-                "bye"
-            }
-            "" => {
-                ""
-            }
-            _ => {
-               "error"
-            }
+            "exit" => "bye",
+            "" => "",
+            _ => "error",
         };
         cmd.to_string()
     }
@@ -89,14 +80,14 @@ impl Transport for FakePowerSocket {
                             return;
                         }
                     };
-                    
-                    let result = FakePowerSocket::process(&mut buf[0..n], 
-                                                          &mut state_clone.lock().unwrap());
-                    if !result.is_empty() {
-                        if let Err(e) = socket.write_all(result.as_bytes()).await {
-                            eprintln!("failed to write to socket; err = {:?}", e);
-                            return;
-                        }
+
+                    let result =
+                        FakePowerSocket::process(&buf[0..n], &mut state_clone.lock().unwrap());
+                    if !result.is_empty()
+                        && let Err(e) = socket.write_all(result.as_bytes()).await
+                    {
+                        eprintln!("failed to write to socket; err = {:?}", e);
+                        return;
                     }
                 }
             });

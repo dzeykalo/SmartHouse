@@ -1,10 +1,10 @@
+use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::net::UdpSocket;
 use std::process::exit;
 use std::thread::sleep;
 use std::time::Duration;
-use rand::Rng;
-use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 struct Config {
@@ -28,7 +28,7 @@ fn main() {
             exit(1);
         }
     };
-    
+
     let cfg: Config = match serde_json::from_str(&data) {
         Ok(cfg) => cfg,
         Err(e) => {
@@ -41,8 +41,9 @@ fn main() {
     let socket = UdpSocket::bind("0.0.0.0:0").expect("Could not bind socket");
     loop {
         let random_temperature: f32 = rand::rng().random_range(18.0..=26.0);
-        let message = format!("{:.2}",random_temperature);
-        socket.send_to(message.as_bytes(), &server_address)
+        let message = format!("{:.2}", random_temperature);
+        socket
+            .send_to(message.as_bytes(), &server_address)
             .expect("Error send to thermometer server");
         sleep(Duration::from_millis(cfg.interval_ms));
     }

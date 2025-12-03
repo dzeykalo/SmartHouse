@@ -19,7 +19,7 @@ fn get_port_then_increment(base: &mut u16) -> u16 {
     port
 }
 
-fn get_name(names_list: &Vec<String>) -> String {
+fn get_name(names_list: &[String]) -> String {
     println!("Available:");
     for (i, name) in names_list.iter().enumerate() {
         println!("  {}: {}", i + 1, name);
@@ -31,7 +31,7 @@ fn get_name(names_list: &Vec<String>) -> String {
     io::stdin().read_line(&mut input).unwrap();
     let idx = input.trim().parse::<usize>().unwrap_or(0);
     if idx == 0 || idx > names_list.len() {
-        return String::new()
+        return String::new();
     }
     names_list[idx - 1].clone()
 }
@@ -90,8 +90,7 @@ fn main() {
                 io::stdin().read_line(&mut input).unwrap();
                 let dev_type = input.trim().parse::<u8>().unwrap_or(0);
 
-
-                let (device_name, device)  = match dev_type {
+                let (device_name, device) = match dev_type {
                     1 => {
                         let port = get_port_then_increment(&mut therm_port);
                         let device_name = format!("thermo_{}", port);
@@ -100,7 +99,10 @@ fn main() {
                     2 => {
                         let port = get_port_then_increment(&mut socket_port);
                         let device_name = format!("socket_{}", port);
-                        (device_name, SmartDevice::new_power_socket("127.0.0.1", port))
+                        (
+                            device_name,
+                            SmartDevice::new_power_socket("127.0.0.1", port),
+                        )
                     }
                     _ => {
                         println!("Invalid device type.");
@@ -122,13 +124,16 @@ fn main() {
                 }
 
                 if let Some(room) = house.get_mut_room(&room_name) {
-                    let device_name= get_name(&room.get_devices_names());
+                    let device_name = get_name(&room.get_devices_names());
                     if device_name.is_empty() {
                         println!("Invalid device number.");
                         continue;
                     }
                     room.del_device(&device_name);
-                    println!("Device '{}' removed from room '{}'.", device_name, room_name);
+                    println!(
+                        "Device '{}' removed from room '{}'.",
+                        device_name, room_name
+                    );
                 }
             }
             3 => {
@@ -139,7 +144,7 @@ fn main() {
                     continue;
                 }
                 if let Some(room) = house.get_mut_room(&room_name) {
-                    let device_name= get_name(&room.get_devices_names());
+                    let device_name = get_name(&room.get_devices_names());
                     if device_name.is_empty() {
                         println!("Invalid device number.");
                         continue;
@@ -158,7 +163,7 @@ fn main() {
                     continue;
                 }
                 if let Some(room) = house.get_mut_room(&room_name) {
-                    let device_name= get_name(&room.get_devices_names());
+                    let device_name = get_name(&room.get_devices_names());
                     if device_name.is_empty() {
                         println!("Invalid device number.");
                         continue;
@@ -181,19 +186,4 @@ fn main() {
             }
         }
     }
-
-    // house.add_room("hall", None);
-    // if let Some(room) = house.get_mut_room("hall") {
-    //     room.add_device("thermometer", SmartDevice::new_thermometer());
-    // }
-    // print_report(house.get_room("hall").unwrap());
-    // if let Some(room) = house.get_mut_room("hall") {
-    //     room.del_device("thermometer");
-    // }
-    // house.del_room("hall");
-    // print_report(&house);
-    // 
-    // if house.get_room("hall").is_none() {
-    //     println!("hall room doesn't exist");
-    // }
 }

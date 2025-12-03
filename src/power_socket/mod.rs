@@ -1,6 +1,6 @@
-use std::cell::RefCell;
 use crate::device::Device;
 use crate::transport::Transport;
+use std::cell::RefCell;
 
 pub struct PowerSocket {
     power: f64,
@@ -43,7 +43,7 @@ impl Device for PowerSocket {
 mod tests {
     use super::*;
     use crate::transport::MockTransport;
-    
+
     #[test]
     fn test_power_socket_initial_state() {
         let socket = PowerSocket::new(Box::new(MockTransport::new("OFF".to_string())));

@@ -1,5 +1,5 @@
-use std::net::TcpStream;
 use std::io::prelude::*;
+use std::net::TcpStream;
 
 pub trait Transport {
     fn communicate(&mut self, cmd: &str) -> String;
@@ -26,16 +26,15 @@ impl Transport for TcpTransport {
         if self.stream.is_none() {
             self.stream = TcpStream::connect(&self.address).ok();
         }
-        if let Some(stream) = &mut self.stream {
-            if stream.write_all(cmd.as_bytes()).is_ok() {
-                let mut buf = [0; 1024];
-                if let Ok(n) = stream.read(&mut buf) {
-                    if let Ok(s) = std::str::from_utf8(&buf[..n]) {
-                        if !s.is_empty() {
-                            return s.to_string();
-                        }
-                    }
-                }
+        if let Some(stream) = &mut self.stream
+            && stream.write_all(cmd.as_bytes()).is_ok()
+        {
+            let mut buf = [0; 1024];
+            if let Ok(n) = stream.read(&mut buf)
+                && let Ok(s) = std::str::from_utf8(&buf[..n])
+                && !s.is_empty()
+            {
+                return s.to_string();
             }
         }
         self.stream = None;
@@ -43,30 +42,25 @@ impl Transport for TcpTransport {
     }
 }
 
-
 pub struct UdpTransport {
     socket: std::net::UdpSocket,
 }
 
 impl UdpTransport {
     pub fn new(ip: &str, port: u16) -> Self {
-        let socket = std::net::UdpSocket::bind(format!("{}:{}", ip, port)).expect(
-            "couldn't bind to address",
-        );
-        Self {
-            socket,
-        }
+        let socket = std::net::UdpSocket::bind(format!("{}:{}", ip, port))
+            .expect("couldn't bind to address");
+        Self { socket }
     }
 }
 
 impl Transport for UdpTransport {
     fn communicate(&mut self, _cmd: &str) -> String {
         let mut buf = [0; 1024];
-        if let Ok((n, _)) = self.socket.recv_from(&mut buf) {
-            match std::str::from_utf8(&buf[..n]) {
-                Ok(s) => return s.to_string(),
-                Err(_) => {}
-            }
+        if let Ok((n, _)) = self.socket.recv_from(&mut buf)
+            && let Ok(s) = std::str::from_utf8(&buf[..n])
+        {
+            return s.to_string();
         }
         String::new()
     }

@@ -72,7 +72,7 @@ impl Reportable for SmartDevice {
 mod tests {
     use super::*;
     use crate::transport::MockTransport;
-    
+
     #[test]
     fn test_smart_device_from_thermometer() {
         let thermometer = Thermometer::new(Box::new(MockTransport::new("".to_string())));
