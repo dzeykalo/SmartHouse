@@ -1,51 +1,108 @@
 use crate::device::Device;
+use crate::transport::Transport;
+use std::cell::RefCell;
+use std::sync::{Arc, Mutex, atomic};
+use std::thread;
+use std::time::Duration;
+
+#[derive(Debug)]
+enum ThermometerState {
+    On,
+    Off,
+}
 
 #[derive(Debug)]
 pub struct Thermometer {
-    temperature: f64,
+    temperature: Arc<Mutex<f64>>,
+    // handle: Option<thread::JoinHandle<()>>,
+    alive: Arc<atomic::AtomicBool>,
+    state: ThermometerState,
+}
+
+impl Drop for Thermometer {
+    fn drop(&mut self) {
+        self.alive.store(false, atomic::Ordering::Relaxed);
+    }
 }
 
 impl Device for Thermometer {
-    fn new(t: f64) -> Self {
-        Self { temperature: t }
-    }
+    fn new(transport: Box<dyn Transport + Send>, t: f64) -> Self {
+        let temperature = Arc::new(Mutex::new(t));
+        let alive = Arc::new(atomic::AtomicBool::new(true));
 
-    fn is_on(&self) -> bool {
-        true
+        let temp_clone = Arc::clone(&temperature);
+        let alive_clone = Arc::clone(&alive);
+        thread::spawn(move || {
+            let t = RefCell::new(transport);
+            let mut tt = t.borrow_mut();
+
+            while alive_clone.load(atomic::Ordering::Relaxed) {
+                let s = tt.communicate("");
+                let temperature = s.parse().unwrap_or_else(|e| {
+                    eprintln!("Error parsing number: {}", e);
+                    0.0f64
+                });
+                if temperature != 0.0f64 {
+                    let mut num = temp_clone.lock().unwrap();
+                    *num = temperature;
+                }
+                thread::sleep(Duration::from_secs(1));
+            }
+        });
+
+        Self {
+            temperature,
+            alive,
+            state: ThermometerState::On,
+        }
     }
 
     fn get_value(&self) -> f64 {
-        self.temperature
+        match self.state {
+            ThermometerState::On => *self.temperature.lock().unwrap(),
+            ThermometerState::Off => 0.0f64,
+        }
     }
 
     fn get_name(&self) -> String {
         String::from("Thermometer")
     }
 
-    fn on(&mut self) {}
+    fn get_state(&self) -> String {
+        match self.state {
+            ThermometerState::On => String::from("ON"),
+            ThermometerState::Off => String::from("OFF"),
+        }
+    }
 
-    fn off(&mut self) {}
+    fn on(&mut self) {
+        self.state = ThermometerState::On;
+    }
+
+    fn off(&mut self) {
+        self.state = ThermometerState::Off;
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::transport::MockTransport;
 
     #[test]
-    fn test_thermometer() {
-        let thermometer = Thermometer::new(23.0);
-        assert_eq!(thermometer.get_name(), "Thermometer");
-        assert_eq!(thermometer.get_value(), 23.0);
-        assert_eq!(thermometer.is_on(), true);
+    fn test_thermometer_get_value() {
+        let thermometer =
+            Thermometer::new(Box::new(MockTransport::new("25.0".to_string())), 0.0f64);
+        thread::sleep(Duration::from_secs(1));
+        assert_eq!(thermometer.get_value(), 25.0);
     }
 
     #[test]
-    fn test_thermometer_turn_on_off() {
-        let mut thermometer = Thermometer::new(25.0);
-        thermometer.on();
-        assert_eq!(thermometer.is_on(), true);
-
+    fn test_thermometer_off() {
+        let mut thermometer =
+            Thermometer::new(Box::new(MockTransport::new("25.0".to_string())), 0.0f64);
+        thread::sleep(Duration::from_secs(1));
         thermometer.off();
-        assert_eq!(thermometer.is_on(), true);
+        assert_eq!(thermometer.get_value(), 0.0);
     }
 }

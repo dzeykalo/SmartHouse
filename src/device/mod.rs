@@ -1,11 +1,14 @@
+use crate::transport::Transport;
+
 pub trait Device {
-    fn new(value: f64) -> Self
+    fn new(transport: Box<dyn Transport + Send>, value: f64) -> Self
     where
         Self: Sized;
-    fn is_on(&self) -> bool;
     fn get_value(&self) -> f64;
 
     fn get_name(&self) -> String;
+
+    fn get_state(&self) -> String;
 
     fn on(&mut self);
 

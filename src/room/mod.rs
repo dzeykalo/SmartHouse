@@ -46,12 +46,16 @@ impl Room {
     pub fn del_device(&mut self, name: &str) -> Option<SmartDevice> {
         self.devises.remove(name)
     }
+
+    pub fn get_devices_names(&self) -> Vec<String> {
+        self.devises.keys().cloned().collect()
+    }
 }
 
 impl Reportable for Room {
     fn generate_report(&self) -> String {
         format!(
-            "{:14}{:14}{:>6}{:>8}\n{}",
+            "{:14}{:14}{:14}{:>6}\n{}",
             "Name",
             "Type",
             "Status",
@@ -72,7 +76,10 @@ mod tests {
     #[test]
     fn test_del_device() {
         let mut room = Room::new();
-        room.add_device("socket", SmartDevice::new_power_socket(100.0));
+        room.add_device(
+            "socket",
+            SmartDevice::new_power_socket("localhost", 8080, 60.0f64),
+        );
         room.del_device("socket");
         assert_eq!(room.devises.len(), 0);
     }
@@ -80,7 +87,10 @@ mod tests {
     #[test]
     fn test_del_device_not_exists() {
         let mut room = Room::new();
-        room.add_device("socket1", SmartDevice::new_power_socket(100.0));
+        room.add_device(
+            "socket1",
+            SmartDevice::new_power_socket("localhost", 8080, 60.0f64),
+        );
         let result = room.del_device("socket2");
         assert!(result.is_none());
         assert!(room.devises.contains_key("socket1"));

@@ -1,35 +1,23 @@
 use crate::device::Device;
+use crate::transport::Transport;
+use std::cell::RefCell;
 
-#[derive(Debug)]
-pub enum PowerSocketState {
-    OFF,
-    ON,
-}
-
-#[derive(Debug)]
 pub struct PowerSocket {
     power: f64,
-    state: PowerSocketState,
+    transport: RefCell<Box<dyn Transport + Send>>,
 }
 
 impl Device for PowerSocket {
-    fn new(w: f64) -> Self {
+    fn new(transport: Box<dyn Transport + Send>, w: f64) -> Self {
         Self {
             power: w,
-            state: PowerSocketState::OFF,
-        }
-    }
-
-    fn is_on(&self) -> bool {
-        match self.state {
-            PowerSocketState::ON => true,
-            PowerSocketState::OFF => false,
+            transport: RefCell::new(transport),
         }
     }
 
     fn get_value(&self) -> f64 {
-        match self.state {
-            PowerSocketState::ON => self.power,
+        match self.get_state().as_str() {
+            "ON" => self.power,
             _ => 0.0,
         }
     }
@@ -38,35 +26,41 @@ impl Device for PowerSocket {
         String::from("PowerSocket")
     }
 
+    fn get_state(&self) -> String {
+        let mut transport = self.transport.borrow_mut();
+        transport.communicate("state").to_ascii_uppercase()
+    }
+
     fn on(&mut self) {
-        self.state = PowerSocketState::ON
+        self.transport.borrow_mut().communicate("on");
     }
     fn off(&mut self) {
-        self.state = PowerSocketState::OFF
+        self.transport.borrow_mut().communicate("off");
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::transport::MockTransport;
 
     #[test]
     fn test_power_socket_initial_state() {
-        let socket = PowerSocket::new(60.0);
+        let socket = PowerSocket::new(Box::new(MockTransport::new("OFF".to_string())), 60.0);
         assert_eq!(socket.get_name(), "PowerSocket");
         assert_eq!(socket.get_value(), 0.0);
-        assert_eq!(socket.is_on(), false);
+        assert_eq!(socket.get_state(), "OFF");
     }
 
     #[test]
     fn test_power_socket_turn_on_off() {
-        let mut socket = PowerSocket::new(0.0);
+        let mut socket = PowerSocket::new(Box::new(MockTransport::new("ON".to_string())), 60.0);
         socket.on();
-        assert_eq!(socket.is_on(), true);
-        assert_eq!(socket.get_value(), 0.0);
+        assert_eq!(socket.get_state(), "ON");
+        assert_eq!(socket.get_value(), 60.0);
 
         socket.off();
-        assert_eq!(socket.is_on(), false);
+        assert_eq!(socket.get_state(), "OFF");
         assert_eq!(socket.get_value(), 0.0);
     }
 }
