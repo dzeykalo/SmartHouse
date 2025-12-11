@@ -1,6 +1,7 @@
 use crate::reportable::Reportable;
 use crate::room::Room;
 use crate::smart_device::SmartDevice;
+use crate::builder::HouseBuilder;
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -32,6 +33,8 @@ impl House {
             rooms: Default::default(),
         }
     }
+
+    pub fn builder() -> HouseBuilder {HouseBuilder::default()}
 
     pub fn get_room(&self, name: &str) -> Option<&Room> {
         self.rooms.get(name)
