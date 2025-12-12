@@ -19,9 +19,17 @@ impl SmartDevice {
         Self::new(Box::new(Thermometer::new(Box::new(transport), temperature)))
     }
 
+    pub fn new_local_thermometer(port: &mut u16) -> Self {
+        Self::new_thermometer("127.0.0.1", Self::get_port_then_increment(port), 23.0f64)
+    }
+
     pub fn new_power_socket(ip: &str, port: u16, wattage: f64) -> Self {
         let transport = TcpTransport::new(ip, port);
         Self::new(Box::new(PowerSocket::new(Box::new(transport), wattage)))
+    }
+
+    pub fn new_local_power_socket(port: &mut u16) -> Self {
+        Self::new_power_socket("127.0.0.1", Self::get_port_then_increment(port), 60.0f64)
     }
 
     pub fn turn_on(&mut self) {
@@ -30,6 +38,15 @@ impl SmartDevice {
 
     pub fn turn_off(&mut self) {
         self.device.off();
+    }
+
+    pub fn get_port_then_increment(base: &mut u16) -> u16 {
+        if *base == 65535 {
+            panic!("No more ports available");
+        }
+        let port = *base;
+        *base += 1;
+        port
     }
 }
 

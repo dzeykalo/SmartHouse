@@ -44,7 +44,7 @@ pub fn run_cli_loop(mut house: House, mut therm_port: u16, mut socket_port: u16)
 
                 let (device_name, device) = match dev_type {
                     1 => {
-                        let port = get_port_then_increment(&mut therm_port);
+                        let port = SmartDevice::get_port_then_increment(&mut therm_port);
                         let device_name = format!("thermo_{}", port);
                         (
                             device_name,
@@ -52,7 +52,7 @@ pub fn run_cli_loop(mut house: House, mut therm_port: u16, mut socket_port: u16)
                         )
                     }
                     2 => {
-                        let port = get_port_then_increment(&mut socket_port);
+                        let port = SmartDevice::get_port_then_increment(&mut socket_port);
                         let device_name = format!("socket_{}", port);
                         (
                             device_name,
@@ -145,15 +145,6 @@ pub fn run_cli_loop(mut house: House, mut therm_port: u16, mut socket_port: u16)
 
 fn print_report<T: Reportable>(x: &T) {
     println!("{}", x.generate_report());
-}
-
-pub fn get_port_then_increment(base: &mut u16) -> u16 {
-    if *base == 65535 {
-        panic!("No more ports available");
-    }
-    let port = *base;
-    *base += 1;
-    port
 }
 
 fn get_name(names_list: &[String]) -> String {

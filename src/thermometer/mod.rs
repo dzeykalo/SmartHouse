@@ -5,13 +5,14 @@ use std::sync::{Arc, Mutex, atomic};
 use std::thread;
 use std::time::Duration;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum ThermometerState {
+    #[default]
     On,
     Off,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Thermometer {
     temperature: Arc<Mutex<f64>>,
     // handle: Option<thread::JoinHandle<()>>,

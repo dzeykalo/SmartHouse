@@ -6,5 +6,4 @@ pub mod room;
 pub mod smart_device;
 pub mod thermometer;
 pub mod transport;
-
 pub mod builder;
