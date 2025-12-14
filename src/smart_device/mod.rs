@@ -1,6 +1,6 @@
 use crate::device::Device;
 use crate::power_socket::PowerSocket;
-use crate::reportable::Reportable;
+use crate::report::Reportable;
 use crate::thermometer::Thermometer;
 use crate::transport::{TcpTransport, UdpTransport};
 use std::fmt::{self, Debug, Formatter};

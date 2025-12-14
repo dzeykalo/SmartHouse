@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::sync::{Arc, Mutex, atomic};
 use std::thread;
 use std::time::Duration;
+use crate::report::Report;
 
 #[derive(Debug, Default)]
 enum ThermometerState {
@@ -82,6 +83,12 @@ impl Device for Thermometer {
 
     fn off(&mut self) {
         self.state = ThermometerState::Off;
+    }
+}
+
+impl Report for Thermometer {
+    fn report(&self) -> String {
+        format!("Thermometer state: {}, temperature: {}", self.get_state(), self.get_value())
     }
 }
 

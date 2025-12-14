@@ -1,4 +1,4 @@
-use crate::reportable::Reportable;
+use crate::report::{Report, Reportable};
 use crate::room::Room;
 use crate::smart_device::SmartDevice;
 use crate::builder::HouseBuilder;
@@ -82,6 +82,12 @@ impl Reportable for House {
             .map(|(name, device)| format!("Room: {}\n{}\n", name, device.generate_report()))
             .collect::<Vec<String>>()
             .join("\n")
+    }
+}
+
+impl Report for House {
+    fn report(&self) -> String {
+        format!("House contains {} rooms witch names: {:?}", self.rooms.len(), self.get_rooms_names())
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::reportable::Reportable;
+use crate::report::{Report, Reportable};
 use crate::smart_device::SmartDevice;
 use std::collections::HashMap;
 
@@ -66,6 +66,12 @@ impl Reportable for Room {
                 .collect::<Vec<String>>()
                 .join("\n")
         )
+    }
+}
+
+impl Report for Room {
+    fn report(&self) -> String {
+        format!("Rooms contains {} devices witch names: {:?}", self.devises.len(), self.get_devices_names())
     }
 }
 
