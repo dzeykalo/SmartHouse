@@ -16,7 +16,6 @@ macro_rules! house {
     }};
 }
 
-#[derive(Debug)]
 pub struct House {
     rooms: HashMap<String, Room>,
 }
@@ -34,7 +33,7 @@ impl House {
         }
     }
 
-    pub fn builder() -> HouseBuilder {HouseBuilder::default()}
+    pub fn builder() -> HouseBuilder {HouseBuilder::new()}
 
     pub fn get_room(&self, name: &str) -> Option<&Room> {
         self.rooms.get(name)

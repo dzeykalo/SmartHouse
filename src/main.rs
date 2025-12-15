@@ -1,6 +1,7 @@
 use smart_house_lib::smart_device::SmartDevice;
 use smart_house_lib::builder::HouseBuilder;
 use smart_house_lib::report::Reporter;
+use smart_house_lib::subscriber::LoggingSubscriber;
 mod cli;
 use cli::run_cli_loop;
 use smart_house_lib::house::House;
@@ -9,7 +10,10 @@ use smart_house_lib::room::Room;
 use smart_house_lib::thermometer::Thermometer;
 
 fn main() {
-
+    let mut room = Room::default();
+    room.subscribe(Box::new(LoggingSubscriber::default()));
+    room.add_device("Socket_1", SmartDevice::new_local_power_socket(&mut 5000));
+    
     let house = House::default();
     let room = Room::default();
     let socket1 = PowerSocket::default();

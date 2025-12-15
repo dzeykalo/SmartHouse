@@ -2,12 +2,10 @@ use crate::house::House;
 use crate::room::Room;
 use crate::smart_device::SmartDevice;
 
-#[derive(Debug, Default)]
 pub struct HouseBuilder {
     pub house: House,
 }
 
-#[derive(Debug, Default)]
 pub struct RoomBuilder<'a> {
     pub house: House,
     pub room_name: &'a str,

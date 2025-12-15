@@ -7,3 +7,4 @@ pub mod smart_device;
 pub mod thermometer;
 pub mod transport;
 pub mod builder;
+pub mod subscriber;

@@ -1,5 +1,6 @@
 use crate::report::{Report, Reportable};
 use crate::smart_device::SmartDevice;
+use crate::subscriber::Subscriber;
 use std::collections::HashMap;
 
 #[macro_export]
@@ -13,9 +14,9 @@ macro_rules! room {
     }};
 }
 
-#[derive(Debug)]
 pub struct Room {
     devises: HashMap<String, SmartDevice>,
+    subscribers: Vec<Box<dyn Subscriber>>,
 }
 
 impl Default for Room {
@@ -28,6 +29,7 @@ impl Room {
     pub fn new() -> Self {
         Room {
             devises: Default::default(),
+            subscribers: Vec::new(),
         }
     }
 
@@ -41,6 +43,10 @@ impl Room {
 
     pub fn add_device(&mut self, name: &str, device: SmartDevice) {
         self.devises.insert(name.to_string(), device);
+        
+        for subscriber in self.subscribers.iter_mut() {
+            subscriber.on_event();
+        }
     }
 
     pub fn del_device(&mut self, name: &str) -> Option<SmartDevice> {
@@ -49,6 +55,10 @@ impl Room {
 
     pub fn get_devices_names(&self) -> Vec<String> {
         self.devises.keys().cloned().collect()
+    }
+    
+    pub fn subscribe(&mut self, subscriber: Box<dyn Subscriber>) {
+        self.subscribers.push(subscriber);
     }
 }
 
