@@ -5,7 +5,7 @@
 cargo run --package smart_house --bin smart_house --profile release
 ```
 
-## Запуск имитаторов умной розетки
+## Запуск имитаторов умной розетки (опционально)
 ```shell
 ./start_imitators.sh
 ```

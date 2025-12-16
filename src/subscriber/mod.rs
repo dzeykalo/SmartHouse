@@ -1,8 +1,15 @@
-
 pub trait Subscriber {
     fn on_event(&mut self);
 }
 
+impl<F> Subscriber for F
+where
+    F: Fn(),
+{
+    fn on_event(&mut self) {
+        self()
+    }
+}
 #[derive(Default)]
 pub struct LoggingSubscriber;
 

@@ -1,8 +1,8 @@
-use std::io;
-use std::io::Write;
 use smart_house_lib::house::House;
 use smart_house_lib::report::Reportable;
 use smart_house_lib::smart_device::SmartDevice;
+use std::io;
+use std::io::Write;
 
 pub fn run_cli_loop(mut house: House, mut therm_port: u16, mut socket_port: u16) {
     loop {

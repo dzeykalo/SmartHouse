@@ -1,7 +1,7 @@
 use crate::device::Device;
+use crate::report::Report;
 use crate::transport::{MockTransport, Transport};
 use std::cell::RefCell;
-use crate::report::Report;
 
 pub struct PowerSocket {
     power: f64,
@@ -51,7 +51,11 @@ impl Device for PowerSocket {
 
 impl Report for PowerSocket {
     fn report(&self) -> String {
-        format!("PowerSocket state: {}, power: {}", self.get_state(), self.get_value())
+        format!(
+            "PowerSocket state: {}, power: {}",
+            self.get_state(),
+            self.get_value()
+        )
     }
 }
 

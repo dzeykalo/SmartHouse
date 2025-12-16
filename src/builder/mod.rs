@@ -2,6 +2,7 @@ use crate::house::House;
 use crate::room::Room;
 use crate::smart_device::SmartDevice;
 
+#[derive(Default)]
 pub struct HouseBuilder {
     pub house: House,
 }
@@ -11,13 +12,9 @@ pub struct RoomBuilder<'a> {
     pub room_name: &'a str,
 }
 
-
 impl HouseBuilder {
-
     pub fn new() -> Self {
-        Self {
-            house: House::default(),
-        }
+        HouseBuilder::default()
     }
 
     pub fn add_room(self, name: &str) -> RoomBuilder<'_> {
@@ -33,19 +30,20 @@ impl HouseBuilder {
 }
 
 impl RoomBuilder<'_> {
-    pub fn add_device<'a>(mut self, name: &str, device: SmartDevice) -> Self {
-        let room = self.house.get_mut_room(&self.room_name);
+    pub fn add_device(mut self, name: &str, device: SmartDevice) -> Self {
+        let room = self.house.get_mut_room(self.room_name);
         if room.is_none() {
-            self.house.add_room(self.room_name, Option::from(Room::new()));
+            self.house
+                .add_room(self.room_name, Option::from(Room::new()));
         }
-        self.house.get_mut_room(&self.room_name).unwrap().add_device(name, device);
+        self.house
+            .get_mut_room(self.room_name)
+            .unwrap()
+            .add_device(name, device);
         self
     }
 
     pub fn build(self) -> HouseBuilder {
-        HouseBuilder {
-            house: self.house,
-        }
+        HouseBuilder { house: self.house }
     }
 }
-

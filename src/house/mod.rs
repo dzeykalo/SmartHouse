@@ -1,7 +1,7 @@
+use crate::builder::HouseBuilder;
 use crate::report::{Report, Reportable};
 use crate::room::Room;
 use crate::smart_device::SmartDevice;
-use crate::builder::HouseBuilder;
 use std::collections::HashMap;
 use std::error::Error;
 
@@ -33,7 +33,9 @@ impl House {
         }
     }
 
-    pub fn builder() -> HouseBuilder {HouseBuilder::new()}
+    pub fn builder() -> HouseBuilder {
+        HouseBuilder::new()
+    }
 
     pub fn get_room(&self, name: &str) -> Option<&Room> {
         self.rooms.get(name)
@@ -86,7 +88,11 @@ impl Reportable for House {
 
 impl Report for House {
     fn report(&self) -> String {
-        format!("House contains {} rooms witch names: {:?}", self.rooms.len(), self.get_rooms_names())
+        format!(
+            "House contains {} rooms witch names: {:?}",
+            self.rooms.len(),
+            self.get_rooms_names()
+        )
     }
 }
 

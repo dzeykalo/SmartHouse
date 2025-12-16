@@ -6,20 +6,29 @@ pub trait Report {
     fn report(&self) -> String;
 }
 
-pub struct Reporter;
+#[derive(Default)]
+pub struct Reporter {
+    entries: Vec<String>,
+}
 
 impl Reporter {
     pub fn new() -> Self {
-        println!("=== Printing report ===");
-        Self
+        println!("{0} Printing report {0}", "=".repeat(30));
+        Self {
+            entries: Vec::new(),
+        }
     }
-    
-    pub fn add<T: Report>(self, item: &T) -> Self {
-        println!("{}", item.report());
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn add<T: Report>(mut self, item: &T) -> Self {
+        self.entries.push(item.report());
         self
     }
 
     pub fn report(self) {
-        println!("=== End of report ===");
+        for entry in &self.entries {
+            println!("{}", entry);
+        }
+        println!("{0} End  of  report {0}", "=".repeat(30));
     }
 }

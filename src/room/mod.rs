@@ -43,7 +43,7 @@ impl Room {
 
     pub fn add_device(&mut self, name: &str, device: SmartDevice) {
         self.devises.insert(name.to_string(), device);
-        
+
         for subscriber in self.subscribers.iter_mut() {
             subscriber.on_event();
         }
@@ -56,7 +56,7 @@ impl Room {
     pub fn get_devices_names(&self) -> Vec<String> {
         self.devises.keys().cloned().collect()
     }
-    
+
     pub fn subscribe(&mut self, subscriber: Box<dyn Subscriber>) {
         self.subscribers.push(subscriber);
     }
@@ -81,7 +81,11 @@ impl Reportable for Room {
 
 impl Report for Room {
     fn report(&self) -> String {
-        format!("Rooms contains {} devices witch names: {:?}", self.devises.len(), self.get_devices_names())
+        format!(
+            "Rooms contains {} devices witch names: {:?}",
+            self.devises.len(),
+            self.get_devices_names()
+        )
     }
 }
 
