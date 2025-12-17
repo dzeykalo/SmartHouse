@@ -1,10 +1,20 @@
 use crate::device::Device;
-use crate::transport::Transport;
+use crate::report::Report;
+use crate::transport::{MockTransport, Transport};
 use std::cell::RefCell;
 
 pub struct PowerSocket {
     power: f64,
     transport: RefCell<Box<dyn Transport + Send>>,
+}
+
+impl Default for PowerSocket {
+    fn default() -> Self {
+        Self {
+            power: 0.0,
+            transport: RefCell::new(Box::new(MockTransport::new("OFF".to_string()))),
+        }
+    }
 }
 
 impl Device for PowerSocket {
@@ -36,6 +46,16 @@ impl Device for PowerSocket {
     }
     fn off(&mut self) {
         self.transport.borrow_mut().communicate("off");
+    }
+}
+
+impl Report for PowerSocket {
+    fn report(&self) -> String {
+        format!(
+            "PowerSocket state: {}, power: {}",
+            self.get_state(),
+            self.get_value()
+        )
     }
 }
 

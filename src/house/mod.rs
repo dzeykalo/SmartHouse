@@ -1,4 +1,5 @@
-use crate::reportable::Reportable;
+use crate::builder::HouseBuilder;
+use crate::report::{Report, Reportable};
 use crate::room::Room;
 use crate::smart_device::SmartDevice;
 use std::collections::HashMap;
@@ -15,7 +16,6 @@ macro_rules! house {
     }};
 }
 
-#[derive(Debug)]
 pub struct House {
     rooms: HashMap<String, Room>,
 }
@@ -31,6 +31,10 @@ impl House {
         House {
             rooms: Default::default(),
         }
+    }
+
+    pub fn builder() -> HouseBuilder {
+        HouseBuilder::new()
     }
 
     pub fn get_room(&self, name: &str) -> Option<&Room> {
@@ -79,6 +83,16 @@ impl Reportable for House {
             .map(|(name, device)| format!("Room: {}\n{}\n", name, device.generate_report()))
             .collect::<Vec<String>>()
             .join("\n")
+    }
+}
+
+impl Report for House {
+    fn report(&self) -> String {
+        format!(
+            "House contains {} rooms witch names: {:?}",
+            self.rooms.len(),
+            self.get_rooms_names()
+        )
     }
 }
 

@@ -1,17 +1,19 @@
 use crate::device::Device;
+use crate::report::Report;
 use crate::transport::Transport;
 use std::cell::RefCell;
 use std::sync::{Arc, Mutex, atomic};
 use std::thread;
 use std::time::Duration;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum ThermometerState {
+    #[default]
     On,
     Off,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Thermometer {
     temperature: Arc<Mutex<f64>>,
     // handle: Option<thread::JoinHandle<()>>,
@@ -81,6 +83,16 @@ impl Device for Thermometer {
 
     fn off(&mut self) {
         self.state = ThermometerState::Off;
+    }
+}
+
+impl Report for Thermometer {
+    fn report(&self) -> String {
+        format!(
+            "Thermometer state: {}, temperature: {}",
+            self.get_state(),
+            self.get_value()
+        )
     }
 }
 
