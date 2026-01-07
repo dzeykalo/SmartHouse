@@ -4,7 +4,7 @@ use smart_house_lib::smart_device::SmartDevice;
 use std::io;
 use std::io::Write;
 
-pub fn run_cli_loop(mut house: House, mut therm_port: u16, mut socket_port: u16) {
+pub fn run_cli_loop(mut house: House) {
     loop {
         println!("\nCommands:");
         println!("  1 - Add device");
@@ -42,22 +42,14 @@ pub fn run_cli_loop(mut house: House, mut therm_port: u16, mut socket_port: u16)
                 io::stdin().read_line(&mut input).unwrap();
                 let dev_type = input.trim().parse::<u8>().unwrap_or(0);
 
-                let (device_name, device) = match dev_type {
+                let (mut device_name, device) = match dev_type {
                     1 => {
-                        let port = SmartDevice::get_port_then_increment(&mut therm_port);
-                        let device_name = format!("thermo_{}", port);
-                        (
-                            device_name,
-                            SmartDevice::new_thermometer("127.0.0.1", port, 0.0f64),
-                        )
+                        let device_name = "Thermometer".to_string();
+                        (device_name, SmartDevice::thermometer(21.5f64))
                     }
                     2 => {
-                        let port = SmartDevice::get_port_then_increment(&mut socket_port);
-                        let device_name = format!("socket_{}", port);
-                        (
-                            device_name,
-                            SmartDevice::new_power_socket("127.0.0.1", port, 50.0f64),
-                        )
+                        let device_name = "PowerSocket".to_string();
+                        (device_name, SmartDevice::power_socket(50.0f64))
                     }
                     _ => {
                         println!("Invalid device type.");
@@ -66,6 +58,7 @@ pub fn run_cli_loop(mut house: House, mut therm_port: u16, mut socket_port: u16)
                 };
 
                 if let Some(room) = house.get_mut_room(&room_name) {
+                    device_name = format!("{}_{}", device_name, room.get_devices_names().len() + 1);
                     room.add_device(&device_name, device);
                     println!("Device '{}' added to room '{}'.", device_name, room_name);
                 }
