@@ -1,27 +1,4 @@
-[package]
-name = "smart_house"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = ["devices", "core"]
 
-[lib]
-name = "smart_house_lib"
-path = "src/lib.rs"
-
-[[bin]]
-name = "smart_house"
-path = "src/main.rs"
-
-[[bin]]
-name = "fake_power_socket"
-path = "src/fake_power_socket/mod.rs"
-
-[[bin]]
-name = "fake_thermometer"
-path = "src/fake_thermometer/mod.rs"
-
-[dependencies]
-tokio = { version = "1.47.1", features = ["full"] }
-rand = { version = "0.9.2" }
-serde_json = { version = "1.0" }
-serde = { version = "1.0.228", features = ["derive"] }
-
+resolver = "3"
